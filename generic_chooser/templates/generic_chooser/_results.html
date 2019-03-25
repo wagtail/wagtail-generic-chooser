@@ -1,0 +1,25 @@
+{% load i18n %}
+
+<table class="listing">
+    <col />
+    <col />
+    <col width="16%" />
+    <thead>
+        <tr class="table-headers">
+            <th>{% trans "Title" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+            <tr>
+                <td class="title">
+                    <h2><a class="item-choice" href="{{ row.choose_url }}">{{ row.title }}</a></h2>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+    {% include "generic_chooser/_ajax_pagination_nav.html" with items=page %}
+{% endif %}
