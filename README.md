@@ -24,103 +24,108 @@ Check out this repository and run `pip install -e .` from the root, or copy the 
 
 The `generic_chooser.views` module provides abstract class-based views `ModelChooseView` and `ModelChosenView`, corresponding to the two stages of the chooser modal: displaying the listing of items, and returning the chosen item to the calling page as JSON data. These can be subclassed to provide a chooser for a given model - for example, to implement a chooser for [bakerydemo](https://github.com/wagtail/bakerydemo)'s `People` model:
 
-    from django.contrib.admin.utils import quote
-    from django.urls import reverse
-    from django.utils.translation import ugettext_lazy as _
+```python
+from django.contrib.admin.utils import quote
+from django.urls import reverse
+from django.utils.translation import ugettext_lazy as _
 
-    from generic_chooser.views import ModelChooseView, ModelChosenView
+from generic_chooser.views import ModelChooseView, ModelChosenView
 
-    from bakerydemo.base.models import People
-
-
-    class ChoosePersonView(ModelChooseView):
-        model = People
-
-        # the URL names registered in the URLconf for the 'choose' and 'chosen' views
-        choose_url_name = 'person_chooser:choose_person'
-        chosen_url_name = 'person_chooser:chosen_person'
-
-        icon = 'user'  # see the Wagtail styleguide app for available icons
-        page_title = _("Choose a person")
-        per_page = 25  # None (the default) gives an unpaginated listing
+from bakerydemo.base.models import People
 
 
-    class ChosenPersonView(ModelChosenView):
-        model = People
+class ChoosePersonView(ModelChooseView):
+    model = People
 
-        def get_edit_item_url(self, item):
-            # Returns a URL where the chosen item can be edited.
-            # This needs to be a method because the wagtailsnippets:edit URL route requires
-            # additional args alongside the item ID; if there were a route that accepted
-            # just the ID, this could be set as the attribute edit_item_url_name instead.
+    # the URL names registered in the URLconf for the 'choose' and 'chosen' views
+    choose_url_name = 'person_chooser:choose_person'
+    chosen_url_name = 'person_chooser:chosen_person'
 
-            return reverse('wagtailsnippets:edit', args=('base', 'people', quote(item.pk)))
+    icon = 'user'  # see the Wagtail styleguide app for available icons
+    page_title = _("Choose a person")
+    per_page = 25  # None (the default) gives an unpaginated listing
+
+
+class ChosenPersonView(ModelChosenView):
+    model = People
+
+    def get_edit_item_url(self, item):
+        # Returns a URL where the chosen item can be edited.
+        # This needs to be a method because the wagtailsnippets:edit URL route requires
+        # additional args alongside the item ID; if there were a route that accepted
+        # just the ID, this could be set as the attribute edit_item_url_name instead.
+
+        return reverse('wagtailsnippets:edit', args=('base', 'people', quote(item.pk)))
+```
 
 These views can be defined in a URL configuration and registered through Wagtail's `register_admin_urls` hook:
 
-    # myapp/admin_urls.py
+```python
+# myapp/admin_urls.py
 
-    from django.conf.urls import url
+from django.conf.urls import url
 
-    from myapp import views
+from myapp import views
 
 
-    app_name = 'person_chooser'
-    urlpatterns = [
-        url(r'^chooser/$', views.ChoosePersonView.as_view(), name='choose_person'),
-        url(r'^chooser/(\d+)/$', views.ChosenPersonView.as_view(), name='chosen_person'),
+app_name = 'person_chooser'
+urlpatterns = [
+    url(r'^chooser/$', views.ChoosePersonView.as_view(), name='choose_person'),
+    url(r'^chooser/(\d+)/$', views.ChosenPersonView.as_view(), name='chosen_person'),
+]
+
+
+# myapp/wagtail_hooks.py
+
+from django.conf.urls import include, url
+from wagtail.core import hooks
+
+from myapp import admin_urls
+
+
+@hooks.register('register_admin_urls')
+def register_admin_urls():
+    return [
+        url(r'^people/', include(admin_urls, namespace='person_chooser')),
     ]
-
-
-    # myapp/wagtail_hooks.py
-
-    from django.conf.urls import include, url
-    from wagtail.core import hooks
-
-    from myapp import admin_urls
-
-
-    @hooks.register('register_admin_urls')
-    def register_admin_urls():
-        return [
-            url(r'^people/', include(admin_urls, namespace='person_chooser')),
-        ]
-
+```
 
 ### Chooser views (Django Rest Framework-based)
 
 The `generic_chooser.views` module also provides abstract class-based views `DRFChooseView` and `DRFChosenView` for building choosers based on Django Rest Framework API endpoints. For example, an API-based chooser for Wagtail's Page model can be implemented as follows:
 
-    from django.utils.translation import ugettext_lazy as _
-    from wagtail.core.models import Page
+```python
+from django.utils.translation import ugettext_lazy as _
+from wagtail.core.models import Page
 
-    from generic_chooser.views import DRFChooseView, DRFChosenView
-
-
-    class ChoosePageAPIView(DRFChooseView):
-        icon = 'page'
-        page_title = _("Choose a page")
-        choose_url_name = 'page_chooser:choose_page'
-        chosen_url_name = 'page_chooser:chosen_page'
-
-        api_base_url = 'http://localhost:8000/api/v2/pages/'
-
-        # enables the search box and passes search terms to the API as the 'search' query parameter
-        is_searchable = True
-
-        per_page = 25
-
-        def get_object_string(self, item):
-            # Given an object dictionary from the API response, return the text to use as the label
-            return item['title']
+from generic_chooser.views import DRFChooseView, DRFChosenView
 
 
-    class ChosenPageAPIView(DRFChosenView):
-        edit_item_url_name = 'wagtailadmin_pages:edit'
-        api_base_url = 'http://localhost:8000/api/v2/pages/'
+class ChoosePageAPIView(DRFChooseView):
+    icon = 'page'
+    page_title = _("Choose a page")
+    choose_url_name = 'page_chooser:choose_page'
+    chosen_url_name = 'page_chooser:chosen_page'
 
-        def get_object_string(self, item):
-            return item['title']
+    api_base_url = 'http://localhost:8000/api/v2/pages/'
+
+    # enables the search box and passes search terms to the API as the 'search' query parameter
+    is_searchable = True
+
+    per_page = 25
+
+    def get_object_string(self, item):
+        # Given an object dictionary from the API response, return the text to use as the label
+        return item['title']
+
+
+class ChosenPageAPIView(DRFChosenView):
+    edit_item_url_name = 'wagtailadmin_pages:edit'
+    api_base_url = 'http://localhost:8000/api/v2/pages/'
+
+    def get_object_string(self, item):
+        return item['title']
+```
 
 These views can be defined in a URL configuration and registered through Wagtail's `register_admin_urls` hook as above.
 
@@ -134,57 +139,61 @@ See the base class implementations in `generic_chooser/views.py` - these provide
 
 The `generic_chooser.widgets` module provides an `AdminChooser` widget to be subclassed. For example, a widget for the `People` model, using the chooser views defined above, can be implemented as follows:
 
-    from django.contrib.admin.utils import quote
-    from django.urls import reverse
-    from django.utils.translation import ugettext_lazy as _
+```python
+from django.contrib.admin.utils import quote
+from django.urls import reverse
+from django.utils.translation import ugettext_lazy as _
 
-    from generic_chooser.widgets import AdminChooser
+from generic_chooser.widgets import AdminChooser
 
-    from bakerydemo.base.models import People
+from bakerydemo.base.models import People
 
 
-    class PersonChooser(AdminChooser):
-        choose_one_text = _('Choose a person')
-        choose_another_text = _('Choose another person')
-        link_to_chosen_text = _('Edit this person')
-        model = People
-        choose_modal_url_name = 'person_chooser:choose_person'
+class PersonChooser(AdminChooser):
+    choose_one_text = _('Choose a person')
+    choose_another_text = _('Choose another person')
+    link_to_chosen_text = _('Edit this person')
+    model = People
+    choose_modal_url_name = 'person_chooser:choose_person'
 
-        def get_edit_item_url(self, item):
-            return reverse('wagtailsnippets:edit', args=('base', 'people', quote(item.pk)))
+    def get_edit_item_url(self, item):
+        return reverse('wagtailsnippets:edit', args=('base', 'people', quote(item.pk)))
+```
 
 This widget can now be used in a form:
 
-    from myapp.widgets import PersonChooser
+```python
+from myapp.widgets import PersonChooser
 
-    class BlogPage(Page):
-        author = models.ForeignKey(
-            'base.People', related_name='blog_posts',
-            null=True, blank=True, on_delete=models.SET_NULL
-        )
+class BlogPage(Page):
+    author = models.ForeignKey(
+        'base.People', related_name='blog_posts',
+        null=True, blank=True, on_delete=models.SET_NULL
+    )
 
-        content_panels = [
-            FieldPanel('author', widget=PersonChooser),
-        ]
-
+    content_panels = [
+        FieldPanel('author', widget=PersonChooser),
+    ]
+```
 
 ### Chooser widgets (Django Rest Framework-based)
 
 `generic_chooser.widgets` also provides a `DRFChooser` base class for chooser widgets backed by Django Rest Framework API endpoints:
 
-    from generic_chooser.widgets import DRFChooser
+```python
+from generic_chooser.widgets import DRFChooser
 
-    class PageAPIChooser(DRFChooser):
-        choose_one_text = _('Choose a page')
-        choose_another_text = _('Choose another page')
-        link_to_chosen_text = _('Edit this page')
-        choose_modal_url_name = 'page_chooser:choose_page'
-        edit_item_url_name = 'wagtailadmin_pages:edit'
-        api_base_url = 'http://localhost:8000/api/v2/pages/'
+class PageAPIChooser(DRFChooser):
+    choose_one_text = _('Choose a page')
+    choose_another_text = _('Choose another page')
+    link_to_chosen_text = _('Edit this page')
+    choose_modal_url_name = 'page_chooser:choose_page'
+    edit_item_url_name = 'wagtailadmin_pages:edit'
+    api_base_url = 'http://localhost:8000/api/v2/pages/'
 
-        def get_title(self, instance):
-            return instance['title']
-
+    def get_title(self, instance):
+        return instance['title']
+```
 
 ### Chooser views (other data sources)
 
