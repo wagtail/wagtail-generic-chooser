@@ -195,6 +195,6 @@ class PageAPIChooser(DRFChooser):
         return instance['title']
 ```
 
-### Chooser views (other data sources)
+### Chooser widgets (other data sources)
 
 See the base class implementations in `generic_chooser/widgets.py`.
