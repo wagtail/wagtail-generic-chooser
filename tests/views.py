@@ -37,11 +37,11 @@ class ChosenPageView(ModelChosenView):
 
 class ChoosePageAPIView(DRFChooseView):
     icon = 'page'
-    page_title = _("Choose a page")
+    page_title = "Choose a page"
     choose_url_name = 'api_page_chooser:choose'
     chosen_url_name = 'api_page_chooser:chosen'
 
-    api_base_url = 'http://localhost:8000/api/v2/pages/'
+    api_base_url = 'http://testserver/api/v2/pages/'
 
     # enables the search box and passes search terms to the API as the 'search' query parameter
     is_searchable = True
@@ -55,7 +55,7 @@ class ChoosePageAPIView(DRFChooseView):
 
 class ChosenPageAPIView(DRFChosenView):
     edit_item_url_name = 'wagtailadmin_pages:edit'
-    api_base_url = 'http://localhost:8000/api/v2/pages/'
+    api_base_url = 'http://testserver/api/v2/pages/'
 
     def get_object_string(self, item):
         return item['title']

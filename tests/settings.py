@@ -61,6 +61,7 @@ INSTALLED_APPS = (
     'generic_chooser',
     'tests',
 
+    'wagtail.api.v2',
     'wagtail.search',
     'wagtail.sites',
     'wagtail.users',
