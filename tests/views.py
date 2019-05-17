@@ -12,6 +12,8 @@ class ChooseSiteView(ModelChooseView):
     icon = 'site'
     page_title = "Choose a site"
 
+    per_page = 10
+
 
 class ChosenSiteView(ModelChosenView):
     model = Site
