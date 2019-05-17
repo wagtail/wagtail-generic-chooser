@@ -67,6 +67,55 @@ class TestChooseView(TestCase):
             response_json['html']
         )
 
+    def test_search(self):
+        homepage = Page.objects.get(depth=2)
+        red_page = homepage.add_child(title='A red page')
+        another_red_page = homepage.add_child(title='Another red page')
+        green_page = homepage.add_child(title='A green page')
+
+        response = self.client.get('/admin/page-chooser/chooser/')
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content)
+        self.assertEqual(response_json['step'], 'choose')
+
+        # response should include a search box
+        self.assertInHTML(
+            '<input type="text" name="q" placeholder="Search" required id="id_q">',
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<a class="item-choice" href="/admin/page-chooser/chooser/%d/">A red page</a>' % red_page.id,
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<a class="item-choice" href="/admin/page-chooser/chooser/%d/">Another red page</a>' % another_red_page.id,
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<a class="item-choice" href="/admin/page-chooser/chooser/%d/">A green page</a>' % green_page.id,
+            response_json['html']
+        )
+
+        response = self.client.get('/admin/page-chooser/chooser/?q=red')
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content)
+        self.assertEqual(response_json['step'], 'choose')
+
+        # response should include red_page and another_red_page but not green_page
+        self.assertInHTML(
+            '<a class="item-choice" href="/admin/page-chooser/chooser/%d/">A red page</a>' % red_page.id,
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<a class="item-choice" href="/admin/page-chooser/chooser/%d/">Another red page</a>' % another_red_page.id,
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<a class="item-choice" href="/admin/page-chooser/chooser/%d/">A green page</a>' % green_page.id,
+            response_json['html'],
+            count=0
+        )
+
 
 class TestChosenView(TestCase):
     def setUp(self):
