@@ -287,3 +287,23 @@ class TestAPIChooseView(FakeRequestsTestCase):
             response_json['html'],
             count=0
         )
+
+
+class TestAPIChosenView(FakeRequestsTestCase):
+    def setUp(self):
+        super().setUp()
+        User.objects.create_superuser(username='admin', email='admin@example.com', password='password')
+        self.assertTrue(
+            self.client.login(username='admin', password='password')
+        )
+
+    def test_get(self):
+        response = self.client.get('/admin/api-page-chooser/chooser/2/')
+        self.assertEqual(response.status_code, 200)
+
+        response_json = json.loads(response.content)
+        self.assertEqual(response_json['step'], 'chosen')
+        self.assertEqual(
+            response_json['result'],
+            {"id": "2", "string": "Welcome to your new Wagtail site!", "edit_link": "/admin/pages/2/edit/"}
+        )
