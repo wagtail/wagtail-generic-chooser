@@ -14,6 +14,10 @@ class ChooseSiteView(ModelChooseView):
 
     per_page = 10
 
+    def get_unfiltered_object_list(self):
+        # enforce ordering by hostname, for consistent pagination
+        return super().get_unfiltered_object_list().order_by('hostname')
+
 
 class ChosenSiteView(ModelChosenView):
     model = Site
