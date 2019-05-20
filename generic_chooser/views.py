@@ -1,5 +1,6 @@
 import requests
 
+from django.conf.urls import url
 from django.contrib.admin.utils import quote, unquote
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Page, Paginator
@@ -11,6 +12,7 @@ from django.views import View
 
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
+from wagtail.admin.viewsets.base import ViewSet
 from wagtail.search.backends import get_search_backend
 from wagtail.search.index import class_is_indexed
 
@@ -26,9 +28,14 @@ class ChooseView(View):
 
     # URL route name for this chooser view - should return the URL of the chooser view when
     # reversed with no arguments. If no suitable URL route exists, subclasses can override
-    # get_choose_modal_url instead.
+    # get_choose_url instead.
     # This will be used as the action URL of the search form.
     choose_url_name = None
+
+    # URL route name for the 'item chosen' view - should return the URL of that view when
+    # reversed with one argument, the instance ID. If no suitable URL route exists,
+    # subclasses can override get_chosen_url instead.
+    chosen_url_name = None
 
     def get(self, request):
 
@@ -134,6 +141,8 @@ class ChooseView(View):
 
 
 class ModelChooseView(ChooseView):
+    model = None
+
     @property
     def is_searchable(self):
         return class_is_indexed(self.model)
@@ -174,6 +183,8 @@ class APIPaginator(Paginator):
 
 
 class DRFChooseView(ChooseView):
+    api_base_url = None
+
     def get_api_parameters(self):
         params = {'format': 'json'}
 
@@ -248,6 +259,8 @@ class ChosenView(View):
 
 
 class ModelChosenView(ChosenView):
+    model = None
+
     def get_object(self, pk):
         return self.model.objects.get(pk=pk)
 
@@ -256,6 +269,8 @@ class ModelChosenView(ChosenView):
 
 
 class DRFChosenView(ChosenView):
+    api_base_url = None
+
     def get_object(self, id):
         url = '%s%s/?format=json' % (self.api_base_url, quote(id))
         result = requests.get(url).json()
@@ -268,3 +283,78 @@ class DRFChosenView(ChosenView):
 
     def get_object_id(self, item):
         return item['id']
+
+
+class ChooserViewSet(ViewSet):
+    choose_view_class = ChooseView
+    chosen_view_class = ChosenView
+
+    def get_choose_view_attrs(self):
+        attrs = {
+            'choose_url_name': self.get_url_name('choose'),
+            'chosen_url_name': self.get_url_name('chosen'),
+        }
+
+        for attr_name in ('icon', 'page_title', 'per_page', 'is_searchable'):
+            if hasattr(self, attr_name):
+                attrs[attr_name] = getattr(self, attr_name)
+
+        return attrs
+
+    @property
+    def choose_view(self):
+        return self.choose_view_class.as_view(**self.get_choose_view_attrs())
+
+    def get_chosen_view_attrs(self):
+        attrs = {}
+
+        for attr_name in ('edit_item_url_name',):
+            if hasattr(self, attr_name):
+                attrs[attr_name] = getattr(self, attr_name)
+
+        return attrs
+
+    @property
+    def chosen_view(self):
+        return self.chosen_view_class.as_view(**self.get_chosen_view_attrs())
+
+    def get_urlpatterns(self):
+        return super().get_urlpatterns() + [
+            url(r'^$', self.choose_view, name='choose'),
+            url(r'^(\d+)/$', self.chosen_view, name='chosen'),
+        ]
+
+
+class ModelChooserViewSet(ChooserViewSet):
+    choose_view_class = ModelChooseView
+    chosen_view_class = ModelChosenView
+
+    def get_choose_view_attrs(self):
+        attrs = super().get_choose_view_attrs()
+        if hasattr(self, 'model'):
+            attrs['model'] = self.model
+
+        return attrs
+
+    def get_chosen_view_attrs(self):
+        attrs = super().get_chosen_view_attrs()
+        if hasattr(self, 'model'):
+            attrs['model'] = self.model
+
+        return attrs
+
+
+class DRFChooserViewSet(ChooserViewSet):
+    def get_choose_view_attrs(self):
+        attrs = super().get_choose_view_attrs()
+        if hasattr(self, 'api_base_url'):
+            attrs['api_base_url'] = self.api_base_url
+
+        return attrs
+
+    def get_chosen_view_attrs(self):
+        attrs = super().get_chosen_view_attrs()
+        if hasattr(self, 'api_base_url'):
+            attrs['api_base_url'] = self.api_base_url
+
+        return attrs

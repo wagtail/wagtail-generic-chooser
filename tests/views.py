@@ -1,41 +1,28 @@
-from generic_chooser.views import DRFChooseView, DRFChosenView, ModelChooseView, ModelChosenView
+from generic_chooser.views import DRFChooseView, DRFChosenView, ModelChooserViewSet, ModelChooseView
 
 from wagtail.core.models import Page, Site
 
 
 class ChooseSiteView(ModelChooseView):
-    model = Site
-
-    choose_url_name = 'site_chooser:choose'
-    chosen_url_name = 'site_chooser:chosen'
-
-    icon = 'site'
-    page_title = "Choose a site"
-
-    per_page = 10
-
     def get_unfiltered_object_list(self):
         # enforce ordering by hostname, for consistent pagination
         return super().get_unfiltered_object_list().order_by('hostname')
 
 
-class ChosenSiteView(ModelChosenView):
+class SiteChooserViewSet(ModelChooserViewSet):
     model = Site
+    icon = 'site'
+    page_title = "Choose a site"
+    per_page = 10
     edit_item_url_name = 'wagtailsites:edit'
 
+    choose_view_class = ChooseSiteView
 
-class ChoosePageView(ModelChooseView):
+
+class PageChooserViewSet(ModelChooserViewSet):
     model = Page
-
-    choose_url_name = 'page_chooser:choose'
-    chosen_url_name = 'page_chooser:chosen'
-
     icon = 'page'
     page_title = "Choose a page"
-
-
-class ChosenPageView(ModelChosenView):
-    model = Page
     edit_item_url_name = 'wagtailadmin_pages:edit'
 
 
