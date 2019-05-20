@@ -142,13 +142,17 @@ class ChooseView(View):
 
 class ModelChooseView(ChooseView):
     model = None
+    order_by = None
 
     @property
     def is_searchable(self):
         return class_is_indexed(self.model)
 
     def get_unfiltered_object_list(self):
-        return self.model.objects.all()
+        objects = self.model.objects.all()
+        if self.order_by:
+            objects = objects.order_by(self.order_by)
+        return objects
 
     def get_object_list(self):
         object_list = self.get_unfiltered_object_list()
@@ -353,6 +357,8 @@ class ModelChooserViewSet(ChooserViewSet):
         attrs = super().get_choose_view_attrs()
         if hasattr(self, 'model'):
             attrs['model'] = self.model
+        if hasattr(self, 'order_by'):
+            attrs['order_by'] = self.order_by
 
         return attrs
 
