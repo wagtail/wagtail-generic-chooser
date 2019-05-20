@@ -186,7 +186,7 @@ class TestAPIChooseView(FakeRequestsTestCase):
         homepage = Page.objects.get(depth=2)
         red_page = homepage.add_child(title='A red page')
 
-        response = self.client.get('/admin/api-page-chooser/chooser/')
+        response = self.client.get('/admin/api-page-chooser/')
         self.assertEqual(response.status_code, 200)
 
         response_json = json.loads(response.content)
@@ -196,7 +196,7 @@ class TestAPIChooseView(FakeRequestsTestCase):
             response_json['html']
         )
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/api-page-chooser/chooser/%d/">A red page</a>' % red_page.id,
+            '<a class="item-choice" href="/admin/api-page-chooser/%d/">A red page</a>' % red_page.id,
             response_json['html']
         )
 
@@ -206,7 +206,7 @@ class TestAPIChooseView(FakeRequestsTestCase):
             homepage.add_child(title='Page %d' % i)
 
         # fetch page 1
-        response = self.client.get('/admin/api-page-chooser/chooser/')
+        response = self.client.get('/admin/api-page-chooser/')
         self.assertEqual(response.status_code, 200)
 
         response_json = json.loads(response.content)
@@ -221,7 +221,7 @@ class TestAPIChooseView(FakeRequestsTestCase):
         )
 
         # fetch page 2
-        response = self.client.get('/admin/api-page-chooser/chooser/?p=2')
+        response = self.client.get('/admin/api-page-chooser/?p=2')
         self.assertEqual(response.status_code, 200)
 
         response_json = json.loads(response.content)
@@ -245,7 +245,7 @@ class TestAPIChooseView(FakeRequestsTestCase):
         another_red_page = homepage.add_child(title='Another red page')
         green_page = homepage.add_child(title='A green page')
 
-        response = self.client.get('/admin/api-page-chooser/chooser/')
+        response = self.client.get('/admin/api-page-chooser/')
         self.assertEqual(response.status_code, 200)
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
@@ -256,34 +256,34 @@ class TestAPIChooseView(FakeRequestsTestCase):
             response_json['html']
         )
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/api-page-chooser/chooser/%d/">A red page</a>' % red_page.id,
+            '<a class="item-choice" href="/admin/api-page-chooser/%d/">A red page</a>' % red_page.id,
             response_json['html']
         )
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/api-page-chooser/chooser/%d/">Another red page</a>' % another_red_page.id,
+            '<a class="item-choice" href="/admin/api-page-chooser/%d/">Another red page</a>' % another_red_page.id,
             response_json['html']
         )
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/api-page-chooser/chooser/%d/">A green page</a>' % green_page.id,
+            '<a class="item-choice" href="/admin/api-page-chooser/%d/">A green page</a>' % green_page.id,
             response_json['html']
         )
 
-        response = self.client.get('/admin/api-page-chooser/chooser/?q=red')
+        response = self.client.get('/admin/api-page-chooser/?q=red')
         self.assertEqual(response.status_code, 200)
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
 
         # response should include red_page and another_red_page but not green_page
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/api-page-chooser/chooser/%d/">A red page</a>' % red_page.id,
+            '<a class="item-choice" href="/admin/api-page-chooser/%d/">A red page</a>' % red_page.id,
             response_json['html']
         )
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/api-page-chooser/chooser/%d/">Another red page</a>' % another_red_page.id,
+            '<a class="item-choice" href="/admin/api-page-chooser/%d/">Another red page</a>' % another_red_page.id,
             response_json['html']
         )
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/api-page-chooser/chooser/%d/">A green page</a>' % green_page.id,
+            '<a class="item-choice" href="/admin/api-page-chooser/%d/">A green page</a>' % green_page.id,
             response_json['html'],
             count=0
         )
@@ -298,7 +298,7 @@ class TestAPIChosenView(FakeRequestsTestCase):
         )
 
     def test_get(self):
-        response = self.client.get('/admin/api-page-chooser/chooser/2/')
+        response = self.client.get('/admin/api-page-chooser/2/')
         self.assertEqual(response.status_code, 200)
 
         response_json = json.loads(response.content)

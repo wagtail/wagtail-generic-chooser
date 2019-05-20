@@ -1,4 +1,4 @@
-from generic_chooser.views import DRFChooseView, DRFChosenView, ModelChooserViewSet, ModelChooseView
+from generic_chooser.views import DRFChooserViewSet, ModelChooserViewSet, ModelChooseView
 
 from wagtail.core.models import Page, Site
 
@@ -26,22 +26,14 @@ class PageChooserViewSet(ModelChooserViewSet):
     edit_item_url_name = 'wagtailadmin_pages:edit'
 
 
-class ChoosePageAPIView(DRFChooseView):
+class APIPageChooserViewSet(DRFChooserViewSet):
     icon = 'page'
     page_title = "Choose a page"
-    choose_url_name = 'api_page_chooser:choose'
-    chosen_url_name = 'api_page_chooser:chosen'
     title_field_name = 'title'
-
     api_base_url = 'http://testserver/api/v2/pages/'
+    edit_item_url_name = 'wagtailadmin_pages:edit'
 
     # enables the search box and passes search terms to the API as the 'search' query parameter
     is_searchable = True
 
     per_page = 10
-
-
-class ChosenPageAPIView(DRFChosenView):
-    edit_item_url_name = 'wagtailadmin_pages:edit'
-    api_base_url = 'http://testserver/api/v2/pages/'
-    title_field_name = 'title'

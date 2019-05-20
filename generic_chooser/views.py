@@ -365,6 +365,9 @@ class ModelChooserViewSet(ChooserViewSet):
 
 
 class DRFChooserViewSet(ChooserViewSet):
+    choose_view_class = DRFChooseView
+    chosen_view_class = DRFChosenView
+
     def get_choose_view_attrs(self):
         attrs = super().get_choose_view_attrs()
         if hasattr(self, 'api_base_url'):
