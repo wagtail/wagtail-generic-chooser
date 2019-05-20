@@ -1,12 +1,6 @@
-from generic_chooser.views import DRFChooserViewSet, ModelChooserViewSet, ModelChooseView
+from generic_chooser.views import DRFChooserViewSet, ModelChooserViewSet
 
 from wagtail.core.models import Page, Site
-
-
-class ChooseSiteView(ModelChooseView):
-    def get_unfiltered_object_list(self):
-        # enforce ordering by hostname, for consistent pagination
-        return super().get_unfiltered_object_list().order_by('hostname')
 
 
 class SiteChooserViewSet(ModelChooserViewSet):
@@ -15,8 +9,7 @@ class SiteChooserViewSet(ModelChooserViewSet):
     page_title = "Choose a site"
     per_page = 10
     edit_item_url_name = 'wagtailsites:edit'
-
-    choose_view_class = ChooseSiteView
+    order_by = 'hostname'
 
 
 class PageChooserViewSet(ModelChooserViewSet):
