@@ -31,6 +31,7 @@ class ChoosePageAPIView(DRFChooseView):
     page_title = "Choose a page"
     choose_url_name = 'api_page_chooser:choose'
     chosen_url_name = 'api_page_chooser:chosen'
+    title_field_name = 'title'
 
     api_base_url = 'http://testserver/api/v2/pages/'
 
@@ -39,14 +40,8 @@ class ChoosePageAPIView(DRFChooseView):
 
     per_page = 10
 
-    def get_object_string(self, item):
-        # Given an object dictionary from the API response, return the text to use as the label
-        return item['title']
-
 
 class ChosenPageAPIView(DRFChosenView):
     edit_item_url_name = 'wagtailadmin_pages:edit'
     api_base_url = 'http://testserver/api/v2/pages/'
-
-    def get_object_string(self, item):
-        return item['title']
+    title_field_name = 'title'

@@ -184,6 +184,7 @@ class APIPaginator(Paginator):
 
 class DRFChooseView(ChooseView):
     api_base_url = None
+    title_field_name = None
 
     def get_api_parameters(self):
         params = {'format': 'json'}
@@ -211,6 +212,15 @@ class DRFChooseView(ChooseView):
 
     def get_object_id(self, item):
         return item['id']
+
+    def get_object_string(self, item):
+        # Given an object dictionary from the API response, return the text to use as the label
+        if self.title_field_name:
+            # use the field specified by title_field_name, if supplied
+            return item[self.title_field_name]
+        else:
+            # fall back on default behaviour (calling str() on the object)
+            super().get_object_string(item)
 
 
 class ChosenView(View):
@@ -270,6 +280,7 @@ class ModelChosenView(ChosenView):
 
 class DRFChosenView(ChosenView):
     api_base_url = None
+    title_field_name = None
 
     def get_object(self, id):
         url = '%s%s/?format=json' % (self.api_base_url, quote(id))
@@ -283,6 +294,15 @@ class DRFChosenView(ChosenView):
 
     def get_object_id(self, item):
         return item['id']
+
+    def get_object_string(self, item):
+        # Given an object dictionary from the API response, return the text to use as the label
+        if self.title_field_name:
+            # use the field specified by title_field_name, if supplied
+            return item[self.title_field_name]
+        else:
+            # fall back on default behaviour (calling str() on the object)
+            super().get_object_string(item)
 
 
 class ChooserViewSet(ViewSet):
@@ -349,6 +369,8 @@ class DRFChooserViewSet(ChooserViewSet):
         attrs = super().get_choose_view_attrs()
         if hasattr(self, 'api_base_url'):
             attrs['api_base_url'] = self.api_base_url
+        if hasattr(self, 'title_field_name'):
+            attrs['title_field_name'] = self.title_field_name
 
         return attrs
 
@@ -356,5 +378,7 @@ class DRFChooserViewSet(ChooserViewSet):
         attrs = super().get_chosen_view_attrs()
         if hasattr(self, 'api_base_url'):
             attrs['api_base_url'] = self.api_base_url
+        if hasattr(self, 'title_field_name'):
+            attrs['title_field_name'] = self.title_field_name
 
         return attrs
