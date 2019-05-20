@@ -16,7 +16,7 @@ class TestChooseView(TestCase):
         )
 
     def test_get(self):
-        response = self.client.get('/admin/site-chooser/chooser/')
+        response = self.client.get('/admin/site-chooser/')
         self.assertEqual(response.status_code, 200)
 
         response_json = json.loads(response.content)
@@ -26,7 +26,7 @@ class TestChooseView(TestCase):
             response_json['html']
         )
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/site-chooser/chooser/1/">localhost [default]</a>',
+            '<a class="item-choice" href="/admin/site-chooser/1/">localhost [default]</a>',
             response_json['html']
         )
 
@@ -36,7 +36,7 @@ class TestChooseView(TestCase):
             Site.objects.create(hostname='%d.example.com' % i, root_page=page)
 
         # fetch page 1
-        response = self.client.get('/admin/site-chooser/chooser/')
+        response = self.client.get('/admin/site-chooser/')
         self.assertEqual(response.status_code, 200)
 
         response_json = json.loads(response.content)
@@ -51,7 +51,7 @@ class TestChooseView(TestCase):
         )
 
         # fetch page 2
-        response = self.client.get('/admin/site-chooser/chooser/?p=2')
+        response = self.client.get('/admin/site-chooser/?p=2')
         self.assertEqual(response.status_code, 200)
 
         response_json = json.loads(response.content)
@@ -75,7 +75,7 @@ class TestChooseView(TestCase):
         another_red_page = homepage.add_child(title='Another red page')
         green_page = homepage.add_child(title='A green page')
 
-        response = self.client.get('/admin/page-chooser/chooser/')
+        response = self.client.get('/admin/page-chooser/')
         self.assertEqual(response.status_code, 200)
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
@@ -86,34 +86,34 @@ class TestChooseView(TestCase):
             response_json['html']
         )
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/page-chooser/chooser/%d/">A red page</a>' % red_page.id,
+            '<a class="item-choice" href="/admin/page-chooser/%d/">A red page</a>' % red_page.id,
             response_json['html']
         )
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/page-chooser/chooser/%d/">Another red page</a>' % another_red_page.id,
+            '<a class="item-choice" href="/admin/page-chooser/%d/">Another red page</a>' % another_red_page.id,
             response_json['html']
         )
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/page-chooser/chooser/%d/">A green page</a>' % green_page.id,
+            '<a class="item-choice" href="/admin/page-chooser/%d/">A green page</a>' % green_page.id,
             response_json['html']
         )
 
-        response = self.client.get('/admin/page-chooser/chooser/?q=red')
+        response = self.client.get('/admin/page-chooser/?q=red')
         self.assertEqual(response.status_code, 200)
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
 
         # response should include red_page and another_red_page but not green_page
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/page-chooser/chooser/%d/">A red page</a>' % red_page.id,
+            '<a class="item-choice" href="/admin/page-chooser/%d/">A red page</a>' % red_page.id,
             response_json['html']
         )
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/page-chooser/chooser/%d/">Another red page</a>' % another_red_page.id,
+            '<a class="item-choice" href="/admin/page-chooser/%d/">Another red page</a>' % another_red_page.id,
             response_json['html']
         )
         self.assertInHTML(
-            '<a class="item-choice" href="/admin/page-chooser/chooser/%d/">A green page</a>' % green_page.id,
+            '<a class="item-choice" href="/admin/page-chooser/%d/">A green page</a>' % green_page.id,
             response_json['html'],
             count=0
         )
@@ -127,7 +127,7 @@ class TestChosenView(TestCase):
         )
 
     def test_get(self):
-        response = self.client.get('/admin/site-chooser/chooser/1/')
+        response = self.client.get('/admin/site-chooser/1/')
         self.assertEqual(response.status_code, 200)
 
         response_json = json.loads(response.content)
