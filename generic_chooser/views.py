@@ -7,20 +7,30 @@ from django.core.paginator import Page, Paginator
 from django.http import Http404
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.text import camel_case_to_spaces, slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views import View
+from django.views.generic.edit import FormMixin, ModelFormMixin
 
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
 from wagtail.admin.viewsets.base import ViewSet
+from wagtail.core.permission_policies import ModelPermissionPolicy
 from wagtail.search.backends import get_search_backend
 from wagtail.search.index import class_is_indexed
 
 
-class ChooseView(View):
+class ChooseView(FormMixin, View):
     icon = 'snippet'
+
     page_title = _("Choose")
     search_placeholder = _("Search")
+    search_tab_label = _("Search")
+    create_tab_label = _("Create")
+    create_form_submit_label = _("Create")
+    create_form_is_long_running = False
+    create_form_submitted_label = _("Uploading…")
+
     template = 'generic_chooser/choose.html'
     results_template = 'generic_chooser/_results.html'
     per_page = None
@@ -36,6 +46,10 @@ class ChooseView(View):
     # reversed with one argument, the instance ID. If no suitable URL route exists,
     # subclasses can override get_chosen_url instead.
     chosen_url_name = None
+
+    # A permission policy object that can be queried to check if the user is able to create
+    # objects of the type being chosen here
+    permission_policy = None
 
     def get(self, request):
 
@@ -101,12 +115,20 @@ class ChooseView(View):
     def get_context_data(self):
         context = {
             'icon': self.icon,
+
             'page_title': self.page_title,
+            'search_tab_label': self.search_tab_label,
+            'create_tab_label': self.create_tab_label,
+            'create_form_submit_label': self.create_form_submit_label,
+            'create_form_is_long_running': self.create_form_is_long_running,
+            'create_form_submitted_label': self.create_form_submitted_label,
+
             'rows': self.get_rows(),
             'results_template': self.get_results_template(),
             'is_searchable': self.is_searchable,
             'choose_url': self.get_choose_url(),
             'is_paginated': self.is_paginated,
+            'prefix': self.get_prefix(),
         }
 
         if self.is_searchable:
@@ -119,6 +141,15 @@ class ChooseView(View):
                 'page': self.object_list,
                 'paginator': self.paginator,
             })
+
+        create_form = None
+        if self.user_can_create(self.request.user):
+            create_form = self.get_form()
+
+        context.update({
+            'create_form': create_form,
+            'tabbed': create_form is not None,
+        })
 
         return context
 
@@ -139,10 +170,42 @@ class ChooseView(View):
     def get_object_id(self, instance):
         raise NotImplementedError
 
+    def user_can_create(self, user):
+        if self.permission_policy:
+            return self.permission_policy.user_has_permission(user, 'add')
+        else:
+            return False
 
-class ModelChooseView(ChooseView):
+    def get_form(self):
+        # accommodate get_form_class returning None to indicate that no
+        # creation form should be rendered
+        if self.get_form_class() is None:
+            return None
+
+        return super().get_form()
+
+    def get_form_kwargs(self):
+        # FormMixin will use self.prefix as the form ID prefix, but we also use self.prefix elsewhere
+        # in the modal (e.g. tab anchor IDs) to avoid clashes with the calling page; we therefore need
+        # to scope the form prefix more tightly
+        kwargs = super().get_form_kwargs()
+        if kwargs['prefix']:
+            kwargs['prefix'] += '-create-form'
+
+        return kwargs
+
+
+class ModelChooseView(ModelFormMixin, ChooseView):
     model = None
     order_by = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.permission_policy:
+            self.permission_policy = ModelPermissionPolicy(self.model)
+
+        if (not self.prefix) and self.model:
+            self.prefix = slugify(camel_case_to_spaces(self.model.__name__)) + '-chooser'
 
     @property
     def is_searchable(self):
@@ -165,6 +228,14 @@ class ModelChooseView(ChooseView):
 
     def get_object_id(self, instance):
         return instance.pk
+
+    def get_form_class(self):
+        if self.fields is None and self.form_class is None:
+            # ModelFormMixin will throw an ImproperlyConfigured if neither fields nor form_class
+            # is supplied; we'll pre-empt this and skip the creation form instead
+            return None
+
+        return super().get_form_class()
 
 
 class APIPaginator(Paginator):
@@ -319,7 +390,9 @@ class ChooserViewSet(ViewSet):
             'chosen_url_name': self.get_url_name('chosen'),
         }
 
-        for attr_name in ('icon', 'page_title', 'per_page', 'is_searchable'):
+        for attr_name in (
+            'icon', 'page_title', 'per_page', 'is_searchable', 'form_class', 'permission_policy', 'prefix'
+        ):
             if hasattr(self, attr_name):
                 attrs[attr_name] = getattr(self, attr_name)
 
@@ -355,10 +428,10 @@ class ModelChooserViewSet(ChooserViewSet):
 
     def get_choose_view_attrs(self):
         attrs = super().get_choose_view_attrs()
-        if hasattr(self, 'model'):
-            attrs['model'] = self.model
-        if hasattr(self, 'order_by'):
-            attrs['order_by'] = self.order_by
+
+        for attr_name in ('model', 'order_by', 'fields'):
+            if hasattr(self, attr_name):
+                attrs[attr_name] = getattr(self, attr_name)
 
         return attrs
 
