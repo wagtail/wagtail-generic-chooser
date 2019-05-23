@@ -301,7 +301,8 @@ class DRFChooseView(ChooseView):
             super().get_object_string(item)
 
 
-class ChosenView(View):
+class ChosenResponseMixin:
+    """Provides helpers for returning a JSON response indicating that an item has been chosen"""
 
     # URL route name for editing an existing item - should return the URL of the item's edit view
     # when reversed with the item's quoted ID as its only argument. If no suitable URL route exists
@@ -324,29 +325,34 @@ class ChosenView(View):
     def get_object_string(self, instance):
         return str(instance)
 
-    def get_response_data(self, item):
+    def get_chosen_response_data(self, item):
         return {
             'id': str(self.get_object_id(item)),
             'string': self.get_object_string(item),
             'edit_link': self.get_edit_item_url(item)
         }
 
+    def get_chosen_response(self, item):
+        response_data = self.get_chosen_response_data(item)
+
+        return render_modal_workflow(
+            self.request,
+            None, None,
+            None, json_data={'step': 'chosen', 'result': response_data}
+        )
+
+
+class ChosenView(ChosenResponseMixin, View):
     def get(self, request, pk):
         try:
             item = self.get_object(unquote(pk))
         except ObjectDoesNotExist:
             raise Http404
 
-        response_data = self.get_response_data(item)
-
-        return render_modal_workflow(
-            request,
-            None, None,
-            None, json_data={'step': 'chosen', 'result': response_data}
-        )
+        return self.get_chosen_response(item)
 
 
-class ModelChosenView(ChosenView):
+class ModelChosenResponseMixin(ChosenResponseMixin):
     model = None
 
     def get_object(self, pk):
@@ -356,7 +362,7 @@ class ModelChosenView(ChosenView):
         return instance.pk
 
 
-class DRFChosenView(ChosenView):
+class DRFChosenResponseMixin(ChosenResponseMixin):
     api_base_url = None
     title_field_name = None
 
@@ -385,7 +391,18 @@ class DRFChosenView(ChosenView):
 
 class ChooserViewSet(ViewSet):
     choose_view_class = ChooseView
-    chosen_view_class = ChosenView
+    chosen_view_base_class = ChosenView
+    chosen_response_mixin_class = ChosenResponseMixin
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # compose a final ChosenView subclass from chosen_view_base_class and chosen_response_mixin_class
+        self.chosen_view_class = type(
+            'ChooserViewSetChosenView',
+            (self.chosen_response_mixin_class, self.chosen_view_base_class),
+            {}
+        )
 
     def get_choose_view_attrs(self):
         attrs = {
@@ -427,7 +444,7 @@ class ChooserViewSet(ViewSet):
 
 class ModelChooserViewSet(ChooserViewSet):
     choose_view_class = ModelChooseView
-    chosen_view_class = ModelChosenView
+    chosen_response_mixin_class = ModelChosenResponseMixin
 
     def get_choose_view_attrs(self):
         attrs = super().get_choose_view_attrs()
@@ -448,7 +465,7 @@ class ModelChooserViewSet(ChooserViewSet):
 
 class DRFChooserViewSet(ChooserViewSet):
     choose_view_class = DRFChooseView
-    chosen_view_class = DRFChosenView
+    chosen_response_mixin_class = DRFChosenResponseMixin
 
     def get_choose_view_attrs(self):
         attrs = super().get_choose_view_attrs()
