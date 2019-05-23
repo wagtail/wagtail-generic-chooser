@@ -19,7 +19,7 @@
             </div>
         </section>
 
-        <section id="{{ prefix }}-create" class="{% if create_form.errors %}active {% endif %}nice-padding">
+        <section id="{{ prefix }}-create" class="create-section {% if create_form.errors %}active {% endif %}nice-padding">
             <form class="create-form" action="{{ choose_url }}" method="POST" {% if create_form.is_multipart %}enctype="multipart/form-data"{% endif %} novalidate>
                 {% csrf_token %}
                 {% block hidden_fields %}
