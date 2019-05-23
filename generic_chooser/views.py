@@ -207,6 +207,9 @@ class ModelChooseView(ModelFormMixin, ChooseView):
         if (not self.prefix) and self.model:
             self.prefix = slugify(camel_case_to_spaces(self.model.__name__)) + '-chooser'
 
+        if (self.create_form_submit_label == ChooseView.create_form_submit_label) and self.model:
+            self.create_form_submit_label = _("Add %s") % self.model._meta.verbose_name
+
     @property
     def is_searchable(self):
         return class_is_indexed(self.model)
