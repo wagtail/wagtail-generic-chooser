@@ -1,0 +1,7 @@
+{% if is_searchable %}
+    {% include "generic_chooser/_search_form.html" %}
+{% endif %}
+
+<div id="search-results" class="listing">
+    {% include results_template %}
+</div>

@@ -31,7 +31,7 @@ class ChooseView(FormMixin, View):
     create_form_is_long_running = False
     create_form_submitted_label = _("Uploading…")
 
-    template = 'generic_chooser/choose.html'
+    template = 'generic_chooser/tabbed_modal.html'
     results_template = 'generic_chooser/_results.html'
     per_page = None
     is_searchable = False
@@ -113,23 +113,33 @@ class ChooseView(FormMixin, View):
         }
 
     def get_context_data(self):
+        prefix = self.get_prefix()
+
         context = {
             'icon': self.icon,
-
             'page_title': self.page_title,
-            'search_tab_label': self.search_tab_label,
-            'create_tab_label': self.create_tab_label,
-            'create_form_submit_label': self.create_form_submit_label,
-            'create_form_is_long_running': self.create_form_is_long_running,
-            'create_form_submitted_label': self.create_form_submitted_label,
 
+            'prefix': prefix,
+
+            'tabs': [],
+            'active_tab': None,
+        }
+
+        # Context for search / listing tab
+        search_tab_id = '%s-search' % prefix
+        context.update({
             'rows': self.get_rows(),
             'results_template': self.get_results_template(),
             'is_searchable': self.is_searchable,
             'choose_url': self.get_choose_url(),
             'is_paginated': self.is_paginated,
-            'prefix': self.get_prefix(),
-        }
+            'active_tab': search_tab_id
+        })
+        context['tabs'].append({
+            'label': self.search_tab_label,
+            'id': search_tab_id,
+            'template': 'generic_chooser/_listing_tab.html',
+        })
 
         if self.is_searchable:
             context.update({
@@ -142,14 +152,28 @@ class ChooseView(FormMixin, View):
                 'paginator': self.paginator,
             })
 
-        create_form = None
+        # Context for create tab
         if self.user_can_create(self.request.user):
             create_form = self.get_form()
 
-        context.update({
-            'create_form': create_form,
-            'tabbed': create_form is not None,
-        })
+            if create_form is not None:
+                create_tab_id = '%s-create' % prefix
+                context.update({
+                    'create_form': create_form,
+                    'create_form_submit_label': self.create_form_submit_label,
+                    'create_form_is_long_running': self.create_form_is_long_running,
+                    'create_form_submitted_label': self.create_form_submitted_label,
+                })
+                context['tabs'].append({
+                    'label': self.create_tab_label,
+                    'id': create_tab_id,
+                    'template': 'generic_chooser/_create_tab.html',
+                })
+
+                # TODO: make this tab active when form has validation errors;
+                # only applicable to form submission view
+                # if create_form.errors:
+                #    context['active_tab'] = create_tab_id
 
         return context
 
