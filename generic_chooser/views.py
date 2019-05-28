@@ -27,7 +27,7 @@ class TabbedModalMixin(ContextMixin, TemplateResponseMixin):
     CBV mixin for rendering tabbed interfaces in a modal; provides two context variables
     `tabs` and `active_tab`.
 
-    Each entry in `tabs` is a dictionary of 'id', 'label' and 'template'; if more than
+    Each entry in `tabs` is a dictionary of 'id', 'label', and 'template'; if more than
     one entry exists, a tabbed interface is rendered, otherwise the single tab's content
     is rendered with no additional page furniture.
 
@@ -56,16 +56,75 @@ class TabbedModalMixin(ContextMixin, TemplateResponseMixin):
         return context
 
 
-class ChooseView(FormMixin, TabbedModalMixin, View):
-    icon = 'snippet'
-    page_title = _("Choose")
-
-    search_placeholder = _("Search")
-    search_tab_label = _("Search")
+class CreateFormMixin(FormMixin, TabbedModalMixin):
     create_tab_label = _("Create")
     create_form_submit_label = _("Create")
     create_form_is_long_running = False
     create_form_submitted_label = _("Uploading…")
+
+    # A permission policy object that can be queried to check if the user is able to create
+    # objects of the type being chosen here
+    permission_policy = None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if self.user_can_create(self.request.user):
+            create_form = self.get_form()
+
+            if create_form is not None:
+                create_tab_id = '%s-create' % self.get_prefix()
+                context.update({
+                    'create_form': create_form,
+                    'create_form_submit_label': self.create_form_submit_label,
+                    'create_form_is_long_running': self.create_form_is_long_running,
+                    'create_form_submitted_label': self.create_form_submitted_label,
+                })
+                context['tabs'].append({
+                    'label': self.create_tab_label,
+                    'id': create_tab_id,
+                    'template': 'generic_chooser/_create_tab.html',
+                })
+
+                # TODO: make this tab active when form has validation errors;
+                # only applicable to form submission view
+                # if create_form.errors:
+                #    context['active_tab'] = create_tab_id
+
+        return context
+
+    def user_can_create(self, user):
+        if self.permission_policy:
+            return self.permission_policy.user_has_permission(user, 'add')
+        else:
+            return False
+
+    def get_form(self):
+        # accommodate get_form_class returning None to indicate that no
+        # creation form should be rendered
+        if self.get_form_class() is None:
+            return None
+
+        return super().get_form()
+
+    def get_form_kwargs(self):
+        # FormMixin will use self.prefix as the form ID prefix, but we also use self.prefix elsewhere
+        # in the modal (e.g. tab anchor IDs) to avoid clashes with the calling page; we therefore need
+        # to scope the form prefix more tightly
+        kwargs = super().get_form_kwargs()
+        if kwargs['prefix']:
+            kwargs['prefix'] += '-create-form'
+
+        return kwargs
+
+
+class ChooseView(CreateFormMixin, TabbedModalMixin, View):
+    icon = 'snippet'
+    page_title = _("Choose")
+    prefix = None
+
+    search_placeholder = _("Search")
+    search_tab_label = _("Search")
 
     results_template = 'generic_chooser/_results.html'
     per_page = None
@@ -81,10 +140,6 @@ class ChooseView(FormMixin, TabbedModalMixin, View):
     # reversed with one argument, the instance ID. If no suitable URL route exists,
     # subclasses can override get_chosen_url instead.
     chosen_url_name = None
-
-    # A permission policy object that can be queried to check if the user is able to create
-    # objects of the type being chosen here
-    permission_policy = None
 
     def get(self, request):
 
@@ -163,7 +218,7 @@ class ChooseView(FormMixin, TabbedModalMixin, View):
             'is_paginated': self.is_paginated,
             'active_tab': search_tab_id
         })
-        context['tabs'].append({
+        context['tabs'].insert(0, {
             'label': self.search_tab_label,
             'id': search_tab_id,
             'template': 'generic_chooser/_listing_tab.html',
@@ -180,33 +235,13 @@ class ChooseView(FormMixin, TabbedModalMixin, View):
                 'paginator': self.paginator,
             })
 
-        # Context for create tab
-        if self.user_can_create(self.request.user):
-            create_form = self.get_form()
-
-            if create_form is not None:
-                create_tab_id = '%s-create' % prefix
-                context.update({
-                    'create_form': create_form,
-                    'create_form_submit_label': self.create_form_submit_label,
-                    'create_form_is_long_running': self.create_form_is_long_running,
-                    'create_form_submitted_label': self.create_form_submitted_label,
-                })
-                context['tabs'].append({
-                    'label': self.create_tab_label,
-                    'id': create_tab_id,
-                    'template': 'generic_chooser/_create_tab.html',
-                })
-
-                # TODO: make this tab active when form has validation errors;
-                # only applicable to form submission view
-                # if create_form.errors:
-                #    context['active_tab'] = create_tab_id
-
         return context
 
     def get_results_template(self):
         return self.results_template
+
+    def get_prefix(self):
+        return self.prefix
 
     def get_object_list(self):
         raise NotImplementedError
@@ -219,34 +254,8 @@ class ChooseView(FormMixin, TabbedModalMixin, View):
     def get_object_id(self, instance):
         raise NotImplementedError
 
-    def user_can_create(self, user):
-        if self.permission_policy:
-            return self.permission_policy.user_has_permission(user, 'add')
-        else:
-            return False
 
-    def get_form(self):
-        # accommodate get_form_class returning None to indicate that no
-        # creation form should be rendered
-        if self.get_form_class() is None:
-            return None
-
-        return super().get_form()
-
-    def get_form_kwargs(self):
-        # FormMixin will use self.prefix as the form ID prefix, but we also use self.prefix elsewhere
-        # in the modal (e.g. tab anchor IDs) to avoid clashes with the calling page; we therefore need
-        # to scope the form prefix more tightly
-        kwargs = super().get_form_kwargs()
-        if kwargs['prefix']:
-            kwargs['prefix'] += '-create-form'
-
-        return kwargs
-
-
-class ModelChooseView(ChooseView):
-    model = None
-    order_by = None
+class ModelCreateFormMixin(CreateFormMixin):
     fields = None
 
     def __init__(self, *args, **kwargs):
@@ -254,11 +263,31 @@ class ModelChooseView(ChooseView):
         if not self.permission_policy:
             self.permission_policy = ModelPermissionPolicy(self.model)
 
-        if (not self.prefix) and self.model:
-            self.prefix = slugify(camel_case_to_spaces(self.model.__name__)) + '-chooser'
-
-        if (self.create_form_submit_label == ChooseView.create_form_submit_label) and self.model:
+        if self.create_form_submit_label == ChooseView.create_form_submit_label:
             self.create_form_submit_label = _("Add %s") % self.model._meta.verbose_name
+
+    def get_form_class(self):
+        if self.form_class:
+            return self.form_class
+        elif self.fields is not None:
+            # construct a form class from the fields list, using modelform_factory
+            return model_forms.modelform_factory(self.model, fields=self.fields)
+        else:
+            # A creation form requires either form_class or a fields list; if neither is
+            # supplied, skip the form
+            return None
+
+
+class ModelChooseView(ModelCreateFormMixin, ChooseView):
+    model = None
+    order_by = None
+    fields = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if not self.prefix:
+            self.prefix = slugify(camel_case_to_spaces(self.model.__name__)) + '-chooser'
 
     @property
     def is_searchable(self):
@@ -281,17 +310,6 @@ class ModelChooseView(ChooseView):
 
     def get_object_id(self, instance):
         return instance.pk
-
-    def get_form_class(self):
-        if self.form_class:
-            return self.form_class
-        elif self.fields is not None:
-            # construct a form class from the fields list, using modelform_factory
-            return model_forms.modelform_factory(self.model, fields=self.fields)
-        else:
-            # A creation form requires either form_class or a fields list; if neither is
-            # supplied, skip the form
-            return None
 
 
 class APIPaginator(Paginator):
