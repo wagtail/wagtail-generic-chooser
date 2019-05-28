@@ -4,13 +4,15 @@ from django.conf.urls import url
 from django.contrib.admin.utils import quote, unquote
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Page, Paginator
+from django.forms import models as model_forms
 from django.http import Http404
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.text import camel_case_to_spaces, slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views import View
-from django.views.generic.edit import FormMixin, ModelFormMixin
+from django.views.generic.base import ContextMixin, TemplateResponseMixin
+from django.views.generic.edit import FormMixin
 
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
@@ -20,10 +22,44 @@ from wagtail.search.backends import get_search_backend
 from wagtail.search.index import class_is_indexed
 
 
-class ChooseView(FormMixin, View):
-    icon = 'snippet'
+class TabbedModalMixin(ContextMixin, TemplateResponseMixin):
+    """
+    CBV mixin for rendering tabbed interfaces in a modal; provides two context variables
+    `tabs` and `active_tab`.
 
+    Each entry in `tabs` is a dictionary of 'id', 'label' and 'template'; if more than
+    one entry exists, a tabbed interface is rendered, otherwise the single tab's content
+    is rendered with no additional page furniture.
+
+    `active_tab` gives the ID of the tab to be initially active.
+
+    Also expects class properties `page_title` and `icon`, to be used in the page header.
+    """
+    template = 'generic_chooser/tabbed_modal.html'
+
+    icon = None
+    page_title = None
+
+    def get_template(self):
+        return self.template
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'icon': self.icon,
+            'page_title': self.page_title,
+
+            'tabs': [],
+            'active_tab': None,
+        })
+
+        return context
+
+
+class ChooseView(FormMixin, TabbedModalMixin, View):
+    icon = 'snippet'
     page_title = _("Choose")
+
     search_placeholder = _("Search")
     search_tab_label = _("Search")
     create_tab_label = _("Create")
@@ -31,7 +67,6 @@ class ChooseView(FormMixin, View):
     create_form_is_long_running = False
     create_form_submitted_label = _("Uploading…")
 
-    template = 'generic_chooser/tabbed_modal.html'
     results_template = 'generic_chooser/_results.html'
     per_page = None
     is_searchable = False
@@ -112,18 +147,11 @@ class ChooseView(FormMixin, View):
             'title': self.get_object_string(item),
         }
 
-    def get_context_data(self):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
         prefix = self.get_prefix()
-
-        context = {
-            'icon': self.icon,
-            'page_title': self.page_title,
-
-            'prefix': prefix,
-
-            'tabs': [],
-            'active_tab': None,
-        }
+        context['prefix'] = prefix
 
         # Context for search / listing tab
         search_tab_id = '%s-search' % prefix
@@ -180,9 +208,6 @@ class ChooseView(FormMixin, View):
     def get_results_template(self):
         return self.results_template
 
-    def get_template(self):
-        return self.template
-
     def get_object_list(self):
         raise NotImplementedError
 
@@ -219,9 +244,10 @@ class ChooseView(FormMixin, View):
         return kwargs
 
 
-class ModelChooseView(ModelFormMixin, ChooseView):
+class ModelChooseView(ChooseView):
     model = None
     order_by = None
+    fields = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -257,12 +283,15 @@ class ModelChooseView(ModelFormMixin, ChooseView):
         return instance.pk
 
     def get_form_class(self):
-        if self.fields is None and self.form_class is None:
-            # ModelFormMixin will throw an ImproperlyConfigured if neither fields nor form_class
-            # is supplied; we'll pre-empt this and skip the creation form instead
+        if self.form_class:
+            return self.form_class
+        elif self.fields is not None:
+            # construct a form class from the fields list, using modelform_factory
+            return model_forms.modelform_factory(self.model, fields=self.fields)
+        else:
+            # A creation form requires either form_class or a fields list; if neither is
+            # supplied, skip the form
             return None
-
-        return super().get_form_class()
 
 
 class APIPaginator(Paginator):
