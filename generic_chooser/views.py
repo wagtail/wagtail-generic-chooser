@@ -118,11 +118,7 @@ class CreateFormMixin(FormMixin, TabbedModalMixin):
         return kwargs
 
 
-class ChooseView(CreateFormMixin, TabbedModalMixin, View):
-    icon = 'snippet'
-    page_title = _("Choose")
-    prefix = None
-
+class SearchTabMixin(TabbedModalMixin):
     search_placeholder = _("Search")
     search_tab_label = _("Search")
 
@@ -140,6 +136,77 @@ class ChooseView(CreateFormMixin, TabbedModalMixin, View):
     # reversed with one argument, the instance ID. If no suitable URL route exists,
     # subclasses can override get_chosen_url instead.
     chosen_url_name = None
+
+    def get_object_string(self, instance):
+        return str(instance)
+
+    def get_choose_url(self):
+        return reverse(self.choose_url_name)
+
+    def get_chosen_url(self, instance):
+        object_id = self.get_object_id(instance)
+        return reverse(self.chosen_url_name, args=(quote(object_id),))
+
+    def get_rows(self):
+        for item in self.object_list:
+            yield self.get_row_data(item)
+
+    def get_row_data(self, item):
+        return {
+            'choose_url': self.get_chosen_url(item),
+            'title': self.get_object_string(item),
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        search_tab_id = '%s-search' % self.get_prefix()
+        context.update({
+            'rows': self.get_rows(),
+            'results_template': self.get_results_template(),
+            'is_searchable': self.is_searchable,
+            'choose_url': self.get_choose_url(),
+            'is_paginated': self.is_paginated,
+            'active_tab': search_tab_id
+        })
+        context['tabs'].insert(0, {
+            'label': self.search_tab_label,
+            'id': search_tab_id,
+            'template': 'generic_chooser/_listing_tab.html',
+        })
+
+        if self.is_searchable:
+            context.update({
+                'search_form': self.search_form,
+            })
+
+        if self.is_paginated:
+            context.update({
+                'page': self.object_list,
+                'paginator': self.paginator,
+            })
+
+        return context
+
+    def get_results_template(self):
+        return self.results_template
+
+    def get_object_list(self):
+        raise NotImplementedError
+
+    def get_paginated_object_list(self):
+        paginator = Paginator(self.get_object_list(), per_page=self.per_page)
+        object_list = paginator.get_page(self.page_number)
+        return (object_list, paginator)
+
+    def get_object_id(self, instance):
+        raise NotImplementedError
+
+
+class ChooseView(SearchTabMixin, CreateFormMixin, TabbedModalMixin, View):
+    icon = 'snippet'
+    page_title = _("Choose")
+    prefix = None
 
     def get(self, request):
 
@@ -182,77 +249,13 @@ class ChooseView(CreateFormMixin, TabbedModalMixin, View):
                 self.get_context_data(), json_data={'step': 'choose'}
             )
 
-    def get_object_string(self, instance):
-        return str(instance)
-
-    def get_choose_url(self):
-        return reverse(self.choose_url_name)
-
-    def get_chosen_url(self, instance):
-        object_id = self.get_object_id(instance)
-        return reverse(self.chosen_url_name, args=(quote(object_id),))
-
-    def get_rows(self):
-        for item in self.object_list:
-            yield self.get_row_data(item)
-
-    def get_row_data(self, item):
-        return {
-            'choose_url': self.get_chosen_url(item),
-            'title': self.get_object_string(item),
-        }
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        prefix = self.get_prefix()
-        context['prefix'] = prefix
-
-        # Context for search / listing tab
-        search_tab_id = '%s-search' % prefix
-        context.update({
-            'rows': self.get_rows(),
-            'results_template': self.get_results_template(),
-            'is_searchable': self.is_searchable,
-            'choose_url': self.get_choose_url(),
-            'is_paginated': self.is_paginated,
-            'active_tab': search_tab_id
-        })
-        context['tabs'].insert(0, {
-            'label': self.search_tab_label,
-            'id': search_tab_id,
-            'template': 'generic_chooser/_listing_tab.html',
-        })
-
-        if self.is_searchable:
-            context.update({
-                'search_form': self.search_form,
-            })
-
-        if self.is_paginated:
-            context.update({
-                'page': self.object_list,
-                'paginator': self.paginator,
-            })
-
+        context['prefix'] = self.get_prefix()
         return context
-
-    def get_results_template(self):
-        return self.results_template
 
     def get_prefix(self):
         return self.prefix
-
-    def get_object_list(self):
-        raise NotImplementedError
-
-    def get_paginated_object_list(self):
-        paginator = Paginator(self.get_object_list(), per_page=self.per_page)
-        object_list = paginator.get_page(self.page_number)
-        return (object_list, paginator)
-
-    def get_object_id(self, instance):
-        raise NotImplementedError
 
 
 class ModelCreateFormMixin(CreateFormMixin):
@@ -278,16 +281,8 @@ class ModelCreateFormMixin(CreateFormMixin):
             return None
 
 
-class ModelChooseView(ModelCreateFormMixin, ChooseView):
-    model = None
+class ModelSearchTabMixin(SearchTabMixin):
     order_by = None
-    fields = None
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        if not self.prefix:
-            self.prefix = slugify(camel_case_to_spaces(self.model.__name__)) + '-chooser'
 
     @property
     def is_searchable(self):
@@ -310,6 +305,16 @@ class ModelChooseView(ModelCreateFormMixin, ChooseView):
 
     def get_object_id(self, instance):
         return instance.pk
+
+
+class ModelChooseView(ModelSearchTabMixin, ModelCreateFormMixin, ChooseView):
+    model = None
+
+    def get_prefix(self):
+        if not self.prefix:
+            self.prefix = slugify(camel_case_to_spaces(self.model.__name__)) + '-chooser'
+
+        return self.prefix
 
 
 class APIPaginator(Paginator):
