@@ -101,14 +101,13 @@ class ChooserMixin:
     # Number of results per page, or None for an unpaginated listing
     per_page = None
 
-    def get_paginated_object_list(self):
+    def get_paginated_object_list(self, page_number):
         """
         Return a page of results according to the `page_number` attribute, as a tuple of
         an iterable sequence of instances and a Paginator object
         """
-        # FIXME: should page_number be a parameter here instead?
         paginator = Paginator(self.get_object_list(), per_page=self.per_page)
-        object_list = paginator.get_page(self.page_number)
+        object_list = paginator.get_page(page_number)
         return (object_list, paginator)
 
     # whether this chooser provides a search field
@@ -202,14 +201,14 @@ class DRFChooserMixin(ChooserMixin):
         result = requests.get(self.api_base_url, params=params).json()
         return result['items']
 
-    def get_paginated_object_list(self):
+    def get_paginated_object_list(self, page_number):
         params = self.get_api_parameters()
         params['limit'] = self.per_page
-        params['offset'] = (self.page_number - 1) * self.per_page
+        params['offset'] = (page_number - 1) * self.per_page
 
         result = requests.get(self.api_base_url, params=params).json()
         paginator = APIPaginator(result['meta']['total_count'], self.per_page)
-        page = Page(result['items'], self.page_number, paginator)
+        page = Page(result['items'], page_number, paginator)
         return (page, paginator)
 
     def get_object_id(self, item):
@@ -260,15 +259,15 @@ class ChooseView(ChooserMixin, View):
         self.is_paginated = self.per_page is not None
         if self.is_paginated:
             try:
-                self.page_number = int(request.GET.get('p', 1))
+                page_number = int(request.GET.get('p', 1))
             except ValueError:
-                self.page_number = 1
+                page_number = 1
 
-            if self.page_number < 1:
-                self.page_number = 1
+            if page_number < 1:
+                page_number = 1
 
         if self.is_paginated:
-            self.object_list, self.paginator = self.get_paginated_object_list()
+            self.object_list, self.paginator = self.get_paginated_object_list(page_number)
         else:
             self.object_list = self.get_object_list()
 
