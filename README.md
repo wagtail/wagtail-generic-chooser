@@ -22,37 +22,26 @@ Check out this repository and run `pip install -e .` from the root, or copy the 
 
 ### Chooser views (model-based)
 
-The `generic_chooser.views` module provides a viewset class `ModelChooserViewSet`, which wraps two class-based views `ModelChooseView` and `ModelChosenView` along with their URL configuration. These views correspond to the two stages of the chooser modal: displaying the listing of items, and returning the chosen item to the calling page as JSON data.
+The `generic_chooser.views` module provides a viewset class `ModelChooserViewSet`, which can be used to build a modal interface for choosing a Django model instance. Viewsets are Wagtail's way of grouping several related views into a single unit along with their URL configuration; this makes it possible to configure the overall behaviour of a workflow within Wagtail without having to know how that workflow breaks down into individual views.
 
-In a simple case, a chooser for a given model can be implemented by subclassing `ModelChooserViewSet` and specifying the model and other configuration options as attributes on that class. More complex customisations can be made by subclassing `ModelChooseView` and `ModelChosenView` and overriding methods on them; the viewset class can then be configured to use those custom views by setting the attributes `chooser_view_class` and `chosen_view_class`. For example, to implement a chooser for [bakerydemo](https://github.com/wagtail/bakerydemo)'s `People` model:
+At minimum, a chooser can be implemented by subclassing `ModelChooserViewSet` and setting a `model` attribute. Other attributes can be specified to customise the look and feel of the chooser, such as the heading icon and number of items per page. For example, to implement a chooser for [bakerydemo](https://github.com/wagtail/bakerydemo)'s `People` model:
 
 ```python
-from django.contrib.admin.utils import quote
-from django.urls import reverse
+# myapp/views.py
+
 from django.utils.translation import ugettext_lazy as _
 
-from generic_chooser.views import ModelChooserViewSet, ModelChosenView
+from generic_chooser.views import ModelChooserViewSet
 
 from bakerydemo.base.models import People
-
-
-class ChosenPersonView(ModelChosenView):
-    def get_edit_item_url(self, item):
-        # Returns a URL where the chosen item can be edited.
-        # This needs to be a method because the wagtailsnippets:edit URL route requires
-        # additional args alongside the item ID; if there were a route that accepted
-        # just the ID, this could be set as the attribute edit_item_url_name instead.
-
-        return reverse('wagtailsnippets:edit', args=('base', 'people', quote(item.pk)))
 
 
 class PersonChooserViewSet(ModelChooserViewSet):
     icon = 'user'
     model = People
     page_title = _("Choose a person")
-    per_page = 2
-
-    chosen_view_class = ChosenPersonView
+    per_page = 10
+    order_by = 'first_name'
 ```
 
 The viewset can then be registered through Wagtail's `register_admin_viewset` hook:
@@ -72,7 +61,7 @@ def register_person_chooser_viewset():
 
 ### Chooser views (Django Rest Framework-based)
 
-The `generic_chooser.views` module also provides a viewset class `DRFChooserViewSet`, along with class-based views `DRFChooseView` and `DRFChosenView`, for building choosers based on Django Rest Framework API endpoints. For example, an API-based chooser for Wagtail's Page model can be implemented as follows:
+The `generic_chooser.views` module also provides a viewset class `DRFChooserViewSet` for building choosers based on Django REST Framework API endpoints. Subclasses need to specify an `api_base_url` attribute. For example, an API-based chooser for Wagtail's Page model can be implemented as follows:
 
 ```python
 from django.utils.translation import ugettext_lazy as _
@@ -92,10 +81,46 @@ class APIPageChooserViewSet(DRFChooserViewSet):
 This viewset can be registered through Wagtail's `register_admin_viewset` hook as above.
 
 
-### Chooser views (other data sources)
+### Customising chooser views
 
-See the base class implementations in `generic_chooser/views.py` - these provide numerous overrideable methods to allow adapting the chooser UI to other data sources, such as non-Django APIs.
+If the configuration options on `ModelChooserViewSet` and `DRFChooserViewSet` are not sufficient, it's possible to fully customise the chooser behaviour by overriding methods. To do this you'll need to work with the individual class-based views and mixins that make up the viewsets - this is best done by referring to the base implementations in `generic_chooser/views.py`. The classes are:
 
+* `ChooserMixin` - an abstract class providing helper methods shared by all views. These deal with data retrieval, and providing string and ID representations and URLs corresponding to the objects being chosen. To implement a chooser for a different data source besides Django models and Django REST Framework, you'll need to subclass this.
+* `ModelChooserMixin` - implementation of `ChooserMixin` using a Django model as the data source.
+* `DRFChooserMixin` - implementation of `ChooserMixin` using a Django REST Framework endpoint as the data source.
+* `ChooserListingTabMixin` - handles the behaviour and rendering of the results listing tab, including pagination and searching.
+* `ChooseView` - class-based view providing the main chooser UI (currently only the results listing tab, but will in future be extended to support a 'create object' tab).
+* `ModelChooseView`, `DRFChooseView` - model-based and DRF-based subclasses of `ChooseView`
+* `ChosenView` - class-based view that returns the chosen object as a JSON response
+* `ModelChosenView`, `DRFChosenView` - model-based and DRF-based subclasses of `ChosenView`
+* `ChooserViewSet` - common base implementation of `ModelChooserViewSet` and `DRFChooserViewSet`
+
+For example, we may want to extend the PersonChooserViewSet above to return an 'edit this person' URL as part of its JSON response, pointing to the `'wagtailsnippets:edit'` view. Including an 'edit' URL in the response would normally be achieved by setting the `edit_item_url_name` attribute on the viewset to a suitable URL route name, but `'wagtailsnippets:edit'` won't work here; this is because `edit_item_url_name` expects it to take a single URL parameter, the ID, whereas the snippet edit view also needs to be passed the model's app name and model name. Instead, we can do this by overriding the `get_edit_item_url` method on `ModelChooserMixin`:
+
+```python
+from django.contrib.admin.utils import quote
+from django.urls import reverse
+from django.utils.translation import ugettext_lazy as _
+
+from generic_chooser.views import ModelChooserMixin, ModelChooserViewSet
+
+from bakerydemo.base.models import People
+
+
+class PersonChooserMixin(ModelChooserMixin):
+    def get_edit_item_url(self, item):
+        return reverse('wagtailsnippets:edit', args=('base', 'people', quote(item.pk)))
+
+
+class PersonChooserViewSet(ModelChooserViewSet):
+    icon = 'user'
+    model = People
+    page_title = _("Choose a person")
+    per_page = 10
+    order_by = 'first_name'
+
+    chooser_mixin_class = PersonChooserMixin
+```
 
 ### Chooser widgets (model-based)
 
