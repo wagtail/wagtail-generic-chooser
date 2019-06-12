@@ -108,22 +108,23 @@ class ChooserMixin:
         else:
             return False
 
-    def get_object_list(self):
+    def get_object_list(self, **kwargs):
         """
-        Return an iterable consisting of all the choosable object instances
+        Return an iterable consisting of all the choosable object instances.
+        kwargs contains parameters that may be used to modify the result set; currently the only
+        one available is 'search_term', passed when is_searchable is True.
         """
-        # FIXME: formalise when filtering (e.g. searching) happens in this workflow
         raise NotImplementedError
 
     # Number of results per page, or None for an unpaginated listing
     per_page = None
 
-    def get_paginated_object_list(self, page_number):
+    def get_paginated_object_list(self, page_number, **kwargs):
         """
         Return a page of results according to the `page_number` attribute, as a tuple of
         an iterable sequence of instances and a Paginator object
         """
-        paginator = Paginator(self.get_object_list(), per_page=self.per_page)
+        paginator = Paginator(self.get_object_list(**kwargs), per_page=self.per_page)
         object_list = paginator.get_page(page_number)
         return (object_list, paginator)
 
@@ -176,12 +177,12 @@ class ModelChooserMixin(ChooserMixin):
             objects = objects.order_by(self.order_by)
         return objects
 
-    def get_object_list(self):
+    def get_object_list(self, search_term=None, **kwargs):
         object_list = self.get_unfiltered_object_list()
 
-        if self.is_searching:
+        if search_term:
             search_backend = get_search_backend()
-            object_list = search_backend.search(self.search_query, object_list)
+            object_list = search_backend.search(search_term, object_list)
 
         return object_list
 
@@ -204,22 +205,22 @@ class DRFChooserMixin(ChooserMixin):
     api_base_url = None
     title_field_name = None
 
-    def get_api_parameters(self):
+    def get_api_parameters(self, search_term=None, **kwargs):
         params = {'format': 'json'}
 
-        if self.is_searching:
-            params['search'] = self.search_query
+        if search_term:
+            params['search'] = search_term
 
         return params
 
-    def get_object_list(self):
-        params = self.get_api_parameters()
+    def get_object_list(self, **kwargs):
+        params = self.get_api_parameters(**kwargs)
 
         result = requests.get(self.api_base_url, params=params).json()
         return result['items']
 
-    def get_paginated_object_list(self, page_number):
-        params = self.get_api_parameters()
+    def get_paginated_object_list(self, page_number, **kwargs):
+        params = self.get_api_parameters(**kwargs)
         params['limit'] = self.per_page
         params['offset'] = (page_number - 1) * self.per_page
 
@@ -270,26 +271,24 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
         return page_number
 
     def get(self, request):
-
-        self.is_searching = False
-        self.search_query = None
+        # parameters passed to get_object_list / get_paginated_object_list to modify results
+        filters = {}
 
         if self.is_searchable:
             if 'q' in request.GET:
                 self.search_form = SearchForm(request.GET, placeholder=self.search_placeholder)
 
                 if self.search_form.is_valid():
-                    self.search_query = self.search_form.cleaned_data['q']
-                    self.is_searching = True
+                    filters['search_term'] = self.search_form.cleaned_data['q']
             else:
                 self.search_form = SearchForm(placeholder=self.search_placeholder)
 
         self.is_paginated = self.per_page is not None
         if self.is_paginated:
             page_number = self.get_page_number_from_url()
-            self.object_list, self.paginator = self.get_paginated_object_list(page_number)
+            self.object_list, self.paginator = self.get_paginated_object_list(page_number, **filters)
         else:
-            self.object_list = self.get_object_list()
+            self.object_list = self.get_object_list(**filters)
 
         # 'results=true' URL param indicates we should only render the results partial
         # rather than serving a full ModalWorkflow response
