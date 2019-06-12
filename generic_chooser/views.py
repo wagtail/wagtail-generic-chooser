@@ -258,6 +258,17 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
     template = 'generic_chooser/choose.html'
     results_template = 'generic_chooser/_results.html'
 
+    def get_page_number_from_url(self):
+        try:
+            page_number = int(self.request.GET.get('p', 1))
+        except ValueError:
+            page_number = 1
+
+        if page_number < 1:
+            page_number = 1
+
+        return page_number
+
     def get(self, request):
 
         self.is_searching = False
@@ -275,15 +286,7 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
 
         self.is_paginated = self.per_page is not None
         if self.is_paginated:
-            try:
-                page_number = int(request.GET.get('p', 1))
-            except ValueError:
-                page_number = 1
-
-            if page_number < 1:
-                page_number = 1
-
-        if self.is_paginated:
+            page_number = self.get_page_number_from_url()
             self.object_list, self.paginator = self.get_paginated_object_list(page_number)
         else:
             self.object_list = self.get_object_list()
