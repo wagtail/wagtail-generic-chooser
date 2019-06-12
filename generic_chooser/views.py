@@ -10,12 +10,29 @@ from django.urls import reverse
 from django.utils.text import camel_case_to_spaces, slugify
 from django.utils.translation import ugettext_lazy as _
 from django.views import View
+from django.views.generic.base import ContextMixin
 
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
 from wagtail.admin.viewsets.base import ViewSet
 from wagtail.search.backends import get_search_backend
 from wagtail.search.index import class_is_indexed
+
+
+class ModalPageFurnitureMixin(ContextMixin):
+    """
+    Add icon and page title to the template context
+    """
+    icon = None
+    page_title = None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'icon': self.icon,
+            'page_title': self.page_title,
+        })
+        return context
 
 
 class ChooserMixin:
@@ -234,7 +251,7 @@ class DRFChooserMixin(ChooserMixin):
         return result
 
 
-class ChooseView(ChooserMixin, View):
+class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
     icon = 'snippet'
     page_title = _("Choose")
     search_placeholder = _("Search")
@@ -292,16 +309,15 @@ class ChooseView(ChooserMixin, View):
             'title': self.get_object_string(item),
         }
 
-    def get_context_data(self):
-        context = {
-            'icon': self.icon,
-            'page_title': self.page_title,
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
             'rows': self.get_rows(),
             'results_template': self.get_results_template(),
             'is_searchable': self.is_searchable,
             'choose_url': self.get_choose_url(),
             'is_paginated': self.is_paginated,
-        }
+        })
 
         if self.is_searchable:
             context.update({
