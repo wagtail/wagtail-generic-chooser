@@ -256,7 +256,10 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
     icon = 'snippet'
     page_title = _("Choose")
     search_placeholder = _("Search")
-    template = 'generic_chooser/choose.html'
+    listing_tab_label = _("Search")
+
+    template = 'generic_chooser/tabbed_modal.html'
+    listing_tab_template = 'generic_chooser/_listing_tab.html'
     results_template = 'generic_chooser/_results.html'
 
     def get_page_number_from_url(self):
@@ -300,6 +303,7 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        prefix = self.get_prefix()
 
         # parameters passed to get_object_list / get_paginated_object_list to modify results
         filters = {}
@@ -316,7 +320,17 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
         else:
             self.object_list = self.get_object_list(**filters)
 
+        search_tab_id = '%s-search' % prefix
         context.update({
+            'tabs': [
+                {
+                    'label': self.listing_tab_label,
+                    'id': search_tab_id,
+                    'template': self.listing_tab_template,
+                },
+            ],
+            'active_tab': search_tab_id,
+
             'rows': self.get_rows(),
             'results_template': self.get_results_template(),
             'is_searchable': self.is_searchable,
@@ -339,6 +353,9 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
 
     def get_results_template(self):
         return self.results_template
+
+    def get_listing_tab_template(self):
+        return self.listing_tab_template
 
     def get_template(self):
         return self.template
