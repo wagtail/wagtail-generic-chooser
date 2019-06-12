@@ -270,26 +270,13 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
 
         return page_number
 
-    def get(self, request):
-        # parameters passed to get_object_list / get_paginated_object_list to modify results
-        filters = {}
-
-        if self.is_searchable:
-            if 'q' in request.GET:
-                self.search_form = SearchForm(request.GET, placeholder=self.search_placeholder)
-
-                if self.search_form.is_valid():
-                    filters['search_term'] = self.search_form.cleaned_data['q']
-            else:
-                self.search_form = SearchForm(placeholder=self.search_placeholder)
-
-        self.is_paginated = self.per_page is not None
-        if self.is_paginated:
-            page_number = self.get_page_number_from_url()
-            self.object_list, self.paginator = self.get_paginated_object_list(page_number, **filters)
+    def get_search_form(self):
+        if 'q' in self.request.GET:
+            return SearchForm(self.request.GET, placeholder=self.search_placeholder)
         else:
-            self.object_list = self.get_object_list(**filters)
+            return SearchForm(placeholder=self.search_placeholder)
 
+    def get(self, request):
         # 'results=true' URL param indicates we should only render the results partial
         # rather than serving a full ModalWorkflow response
         if request.GET.get('results') == 'true':
@@ -313,6 +300,22 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # parameters passed to get_object_list / get_paginated_object_list to modify results
+        filters = {}
+
+        if self.is_searchable:
+            self.search_form = self.get_search_form()
+            if self.search_form.is_valid():
+                filters['search_term'] = self.search_form.cleaned_data['q']
+
+        self.is_paginated = self.per_page is not None
+        if self.is_paginated:
+            page_number = self.get_page_number_from_url()
+            self.object_list, self.paginator = self.get_paginated_object_list(page_number, **filters)
+        else:
+            self.object_list = self.get_object_list(**filters)
+
         context.update({
             'rows': self.get_rows(),
             'results_template': self.get_results_template(),
