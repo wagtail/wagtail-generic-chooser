@@ -252,13 +252,10 @@ class DRFChooserMixin(ChooserMixin):
         return result
 
 
-class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
-    icon = 'snippet'
-    page_title = _("Choose")
+class ChooserListingTabMixin:
     search_placeholder = _("Search")
     listing_tab_label = _("Search")
 
-    template = 'generic_chooser/tabbed_modal.html'
     listing_tab_template = 'generic_chooser/_listing_tab.html'
     results_template = 'generic_chooser/_results.html'
 
@@ -279,18 +276,6 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
         else:
             return SearchForm(placeholder=self.search_placeholder)
 
-    def get(self, request):
-        # 'results=true' URL param indicates we should only render the results partial
-        # rather than serving a full ModalWorkflow response
-        if request.GET.get('results') == 'true':
-            return render(request, self.get_results_template(), self.get_context_data())
-        else:
-            return render_modal_workflow(
-                request,
-                self.get_template(), None,
-                self.get_context_data(), json_data={'step': 'choose'}
-            )
-
     def get_rows(self):
         for item in self.object_list:
             yield self.get_row_data(item)
@@ -301,10 +286,13 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
             'title': self.get_object_string(item),
         }
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        prefix = self.get_prefix()
+    def get_results_template(self):
+        return self.results_template
 
+    def get_listing_tab_template(self):
+        return self.listing_tab_template
+
+    def get_listing_tab_context_data(self):
         # parameters passed to get_object_list / get_paginated_object_list to modify results
         filters = {}
 
@@ -320,23 +308,13 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
         else:
             self.object_list = self.get_object_list(**filters)
 
-        search_tab_id = '%s-search' % prefix
-        context.update({
-            'tabs': [
-                {
-                    'label': self.listing_tab_label,
-                    'id': search_tab_id,
-                    'template': self.listing_tab_template,
-                },
-            ],
-            'active_tab': search_tab_id,
-
+        context = {
             'rows': self.get_rows(),
             'results_template': self.get_results_template(),
             'is_searchable': self.is_searchable,
             'choose_url': self.get_choose_url(),
             'is_paginated': self.is_paginated,
-        })
+        }
 
         if self.is_searchable:
             context.update({
@@ -351,11 +329,51 @@ class ChooseView(ChooserMixin, ModalPageFurnitureMixin, ContextMixin, View):
 
         return context
 
-    def get_results_template(self):
-        return self.results_template
 
-    def get_listing_tab_template(self):
-        return self.listing_tab_template
+class ChooseView(ChooserMixin, ChooserListingTabMixin, ModalPageFurnitureMixin, ContextMixin, View):
+    icon = 'snippet'
+    page_title = _("Choose")
+
+    template = 'generic_chooser/tabbed_modal.html'
+
+    def get(self, request):
+        # 'results=true' URL param indicates we should only render the results partial
+        # rather than serving a full ModalWorkflow response
+        if request.GET.get('results') == 'true':
+            return render(
+                request,
+                self.get_results_template(),
+                self.get_context_data(results_only=True)
+            )
+        else:
+            return render_modal_workflow(
+                request,
+                self.get_template(), None,
+                self.get_context_data(), json_data={'step': 'choose'}
+            )
+
+    def get_context_data(self, results_only=False, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # skip setting the full tabbed-interface context if we're only returning the results
+        # partial
+        if not results_only:
+            prefix = self.get_prefix()
+            listing_tab_id = '%s-search' % prefix
+            context.update({
+                'tabs': [
+                    {
+                        'label': self.listing_tab_label,
+                        'id': listing_tab_id,
+                        'template': self.listing_tab_template,
+                    },
+                ],
+                'active_tab': listing_tab_id,
+            })
+
+        context.update(self.get_listing_tab_context_data())
+
+        return context
 
     def get_template(self):
         return self.template
