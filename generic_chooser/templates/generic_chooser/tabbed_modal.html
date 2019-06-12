@@ -1,0 +1,23 @@
+{% if tabs|length == 1 %}
+    {% include "wagtailadmin/shared/header.html" with title=page_title icon=icon tabbed=0 merged=0 %}
+
+    <div class="nice-padding">
+        {% include tabs.0.template %}
+    </div>
+{% else %}
+    {% include "wagtailadmin/shared/header.html" with title=page_title icon=icon tabbed=1 merged=1 %}
+
+    <ul class="tab-nav merged">
+        {% for tab in tabs %}
+            <li class="{% if tab.id == active_tab %}active{% endif %}"><a href="#{{ tab.id }}">{{ tab.label }}</a></li>
+        {% endfor %}
+    </ul>
+
+    <div class="tab-content">
+        {% for tab in tabs %}
+            <section id="{{ tab.id }}" class="{% if tab.id == active_tab %}active {% endif %}nice-padding">
+                {% include tab.template %}
+            </section>
+        {% endfor %}
+    </div>
+{% endif %}
