@@ -592,7 +592,9 @@ class ChooserViewSet(ViewSet):
             'chosen_url_name': self.get_url_name('chosen'),
         }
 
-        for attr_name in ('icon', 'page_title', 'per_page', 'is_searchable', 'form_class'):
+        for attr_name in (
+            'icon', 'page_title', 'per_page', 'is_searchable', 'form_class', 'edit_item_url_name'
+        ):
             if hasattr(self, attr_name):
                 attrs[attr_name] = getattr(self, attr_name)
 

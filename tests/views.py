@@ -10,6 +10,7 @@ class SiteChooserViewSet(ModelChooserViewSet):
     per_page = 10
     edit_item_url_name = 'wagtailsites:edit'
     order_by = 'hostname'
+    fields = ['hostname', 'port', 'site_name', 'root_page', 'is_default_site']
 
 
 class PageChooserViewSet(ModelChooserViewSet):

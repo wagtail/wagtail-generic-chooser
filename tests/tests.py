@@ -2,7 +2,7 @@ import json
 from urllib.parse import urlencode, urlparse
 from unittest.mock import patch
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
 from wagtail.core.models import Page, Site
@@ -11,11 +11,14 @@ from wagtail.core.models import Page, Site
 class TestChooseView(TestCase):
     def setUp(self):
         User.objects.create_superuser(username='admin', email='admin@example.com', password='password')
+        editor = User.objects.create_user(username='editor', email='editor@example.com', password='password')
+        editor.groups.add(Group.objects.get(name='Editors'))
+
+    def test_get(self):
         self.assertTrue(
             self.client.login(username='admin', password='password')
         )
 
-    def test_get(self):
         response = self.client.get('/admin/site-chooser/')
         self.assertEqual(response.status_code, 200)
 
@@ -31,6 +34,10 @@ class TestChooseView(TestCase):
         )
 
     def test_pagination(self):
+        self.assertTrue(
+            self.client.login(username='admin', password='password')
+        )
+
         page = Page.objects.first()
         for i in range(0, 25):
             Site.objects.create(hostname='%d.example.com' % i, root_page=page)
@@ -70,6 +77,10 @@ class TestChooseView(TestCase):
         )
 
     def test_search(self):
+        self.assertTrue(
+            self.client.login(username='admin', password='password')
+        )
+
         homepage = Page.objects.get(depth=2)
         red_page = homepage.add_child(title='A red page')
         another_red_page = homepage.add_child(title='Another red page')
@@ -116,6 +127,105 @@ class TestChooseView(TestCase):
             '<a class="item-choice" href="/admin/page-chooser/%d/">A green page</a>' % green_page.id,
             response_json['html'],
             count=0
+        )
+
+    def test_creation_form(self):
+        self.assertTrue(
+            self.client.login(username='admin', password='password')
+        )
+
+        response = self.client.get('/admin/site-chooser/')
+        self.assertEqual(response.status_code, 200)
+
+        # Admin has create permission for sites, so should get the create form
+        response_json = json.loads(response.content)
+        self.assertInHTML(
+            '<a href="#site-chooser-create">Create</a>',
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<input type="text" name="site-chooser-create-form-hostname" maxlength="255" required id="id_site-chooser-create-form-hostname">',
+            response_json['html']
+        )
+
+    def test_creation_form_requires_create_permission(self):
+        self.assertTrue(
+            self.client.login(username='editor', password='password')
+        )
+
+        response = self.client.get('/admin/site-chooser/')
+        self.assertEqual(response.status_code, 200)
+
+        # Editor should NOT get the create form
+        response_json = json.loads(response.content)
+        self.assertInHTML(
+            '<a href="#site-chooser-create">Create</a>',
+            response_json['html'],
+            count=0
+        )
+        self.assertInHTML(
+            '<input type="text" name="site-chooser-create-form-hostname" maxlength="255" required id="id_site-chooser-create-form-hostname">',
+            response_json['html'],
+            count=0
+        )
+
+        # POST should be rejected outright
+        response = self.client.post('/admin/site-chooser/', {
+            'site-chooser-create-form-hostname': 'foo',
+            'site-chooser-create-form-port': '123',
+            'site-chooser-create-form-site_name': 'foo',
+            'site-chooser-create-form-root_page': Page.objects.filter(depth=2).first().pk,
+        })
+        self.assertEqual(response.status_code, 403)
+
+    def test_post_invalid_creation_form(self):
+        self.assertTrue(
+            self.client.login(username='admin', password='password')
+        )
+
+        response = self.client.post('/admin/site-chooser/', {
+            'site-chooser-create-form-hostname': '',
+            'site-chooser-create-form-port': '123',
+            'site-chooser-create-form-site_name': 'foo',
+            'site-chooser-create-form-root_page': Page.objects.filter(depth=2).first().pk,
+        })
+        self.assertEqual(response.status_code, 200)
+        # should be returned to the chooser view (step=choose) with a validation error
+        # and the Create tab active
+        response_json = json.loads(response.content)
+        self.assertEqual(response_json['step'], 'choose')
+
+        self.assertInHTML(
+            '<li class="active"><a href="#site-chooser-create">Create</a></li>',
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<span>This field is required.</span>',
+            response_json['html']
+        )
+
+    def test_post_valid_creation_form(self):
+        self.assertTrue(
+            self.client.login(username='admin', password='password')
+        )
+
+        response = self.client.post('/admin/site-chooser/', {
+            'site-chooser-create-form-hostname': 'foo',
+            'site-chooser-create-form-port': '123',
+            'site-chooser-create-form-site_name': 'foo',
+            'site-chooser-create-form-root_page': Page.objects.filter(depth=2).first().pk,
+        })
+        self.assertEqual(response.status_code, 200)
+
+        # Site should be created
+        site = Site.objects.get(hostname='foo')
+
+        # should receive a step=chosen response
+        response_json = json.loads(response.content)
+        self.assertEqual(response_json['step'], 'chosen')
+        self.assertEqual(
+            response_json['result'],
+            {"id": str(site.id), "string": "foo", "edit_link": "/admin/sites/%d/" % site.id}
         )
 
 
