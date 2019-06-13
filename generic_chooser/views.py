@@ -2,7 +2,7 @@ import requests
 
 from django.conf.urls import url
 from django.contrib.admin.utils import quote, unquote
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.paginator import Page, Paginator
 from django.forms import models as model_forms
 from django.http import Http404
@@ -390,12 +390,18 @@ class ChooserCreateTabMixin:
 
         return True
 
+    def form_valid(self, form):
+        """
+        Called when a valid form submission is received; returns the created object
+        """
+        raise NotImplementedError
+
     def get_create_tab_context_data(self):
         context = {
             'create_form_submit_label': self.create_form_submit_label,
             'create_form_is_long_running': self.create_form_is_long_running,
             'create_form_submitted_label': self.create_form_submitted_label,
-            'create_form': self.get_form(),
+            'create_form': self.form,
         }
 
         return context
@@ -417,6 +423,13 @@ class ModelChooserCreateTabMixin(ChooserCreateTabMixin):
 
         return self.form_class
 
+    def form_valid(self, form):
+        """
+        Called when a valid form submission is received; returns the created object
+        """
+        instance = form.save()
+        return instance
+
 
 class BaseChooseView(ModalPageFurnitureMixin, ContextMixin, View):
     icon = 'snippet'
@@ -436,6 +449,24 @@ class BaseChooseView(ModalPageFurnitureMixin, ContextMixin, View):
                 self.get_results_template(),
                 self.get_context_data(results_only=True)
             )
+        else:
+            if self.create_form_is_available():
+                self.form = self.get_form()
+
+            return render_modal_workflow(
+                request,
+                self.get_template(), None,
+                self.get_context_data(), json_data={'step': 'choose'}
+            )
+
+    def post(self, request):
+        if not self.create_form_is_available():
+            raise PermissionDenied
+
+        self.form = self.get_form()
+        if self.form.is_valid():
+            instance = self.form_valid(self.form)
+            return self.get_chosen_response(instance)
         else:
             return render_modal_workflow(
                 request,
@@ -476,6 +507,9 @@ class BaseChooseView(ModalPageFurnitureMixin, ContextMixin, View):
                     'classname': 'create-section',
                 })
                 context.update(self.get_create_tab_context_data())
+                if self.request.method == 'POST' and not self.form.is_valid():
+                    # focus the create tab on validation errors
+                    context['active_tab'] = create_tab_id
 
             return context
 
