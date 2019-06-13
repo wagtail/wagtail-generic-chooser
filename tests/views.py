@@ -1,6 +1,6 @@
-from generic_chooser.views import DRFChooserViewSet, ModelChooserViewSet
-
+from django import forms
 from wagtail.core.models import Page, Site
+from generic_chooser.views import DRFChooserMixin, DRFChooserViewSet, ModelChooserViewSet
 
 
 class SiteChooserViewSet(ModelChooserViewSet):
@@ -31,3 +31,22 @@ class APIPageChooserViewSet(DRFChooserViewSet):
     is_searchable = True
 
     per_page = 10
+
+
+class PersonChooserMixin(DRFChooserMixin):
+    def get_object_string(self, item):
+        return "%s %s" % (item['first_name'], item['last_name'])
+
+
+class PersonForm(forms.Form):
+    first_name = forms.CharField(required=True)
+    last_name = forms.CharField(required=True)
+    job_title = forms.CharField(required=True)
+
+
+class PersonChooserViewSet(DRFChooserViewSet):
+    icon = 'user'
+    api_base_url = 'http://testserver/person-api/'
+    form_class = PersonForm
+    chooser_mixin_class = PersonChooserMixin
+    prefix = 'person-chooser'

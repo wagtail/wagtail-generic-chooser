@@ -85,3 +85,12 @@ PASSWORD_HASHERS = (
 )
 
 WAGTAIL_SITE_NAME = 'wagtail-generic-chooser test'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny'
+    ],
+
+    'DEFAULT_PAGINATION_CLASS': 'wagtail.api.v2.pagination.WagtailPagination',
+    'PAGE_SIZE': 100,
+}

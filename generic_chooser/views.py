@@ -112,7 +112,10 @@ class ChooserMixin:
         if permission_policy:
             return permission_policy.user_has_permission(user, 'add')
         else:
-            return False
+            # If no permission policy set, treat that as granting access to all authenticated
+            # users; this is the 'least surprise' approach, as the implementer would expect the
+            # form to appear once a form_class (or fields) property is set up
+            return True
 
     def get_object_list(self, **kwargs):
         """
@@ -431,6 +434,12 @@ class ModelChooserCreateTabMixin(ChooserCreateTabMixin):
         return instance
 
 
+class DRFChooserCreateTabMixin(ChooserCreateTabMixin):
+    def form_valid(self, form):
+        result = requests.post(self.api_base_url, json=form.cleaned_data)
+        return result.json()
+
+
 class BaseChooseView(ModalPageFurnitureMixin, ContextMixin, View):
     icon = 'snippet'
     page_title = _("Choose")
@@ -537,7 +546,7 @@ class APIPaginator(Paginator):
         return self._count
 
 
-class DRFChooseView(DRFChooserMixin, ChooserListingTabMixin, ChooserCreateTabMixin, BaseChooseView):
+class DRFChooseView(DRFChooserMixin, ChooserListingTabMixin, DRFChooserCreateTabMixin, BaseChooseView):
     pass
 
 
@@ -593,7 +602,8 @@ class ChooserViewSet(ViewSet):
         }
 
         for attr_name in (
-            'icon', 'page_title', 'per_page', 'is_searchable', 'form_class', 'edit_item_url_name'
+            'icon', 'page_title', 'per_page', 'is_searchable', 'form_class', 'edit_item_url_name',
+            'permission_policy', 'prefix',
         ):
             if hasattr(self, attr_name):
                 attrs[attr_name] = getattr(self, attr_name)
@@ -607,7 +617,7 @@ class ChooserViewSet(ViewSet):
     def get_chosen_view_attrs(self):
         attrs = {}
 
-        for attr_name in ('edit_item_url_name',):
+        for attr_name in ('edit_item_url_name', 'prefix',):
             if hasattr(self, attr_name):
                 attrs[attr_name] = getattr(self, attr_name)
 
@@ -646,6 +656,7 @@ class ModelChooserViewSet(ChooserViewSet):
 
 class DRFChooserViewSet(ChooserViewSet):
     chooser_mixin_class = DRFChooserMixin
+    create_tab_mixin_class = DRFChooserCreateTabMixin
 
     def get_choose_view_attrs(self):
         attrs = super().get_choose_view_attrs()
