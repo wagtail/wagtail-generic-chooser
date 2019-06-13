@@ -60,7 +60,7 @@ def register_person_chooser_viewset():
     return PersonChooserViewSet('person_chooser', url_prefix='person-chooser')
 ```
 
-### Chooser views (Django Rest Framework-based)
+### Chooser views (Django REST Framework-based)
 
 The `generic_chooser.views` module also provides a viewset class `DRFChooserViewSet` for building choosers based on Django REST Framework API endpoints. Subclasses need to specify an `api_base_url` attribute. For example, an API-based chooser for Wagtail's Page model can be implemented as follows:
 
@@ -82,6 +82,69 @@ class APIPageChooserViewSet(DRFChooserViewSet):
 This viewset can be registered through Wagtail's `register_admin_viewset` hook as above.
 
 
+### Creating objects within the chooser
+
+Setting a `form_class` attribute on the viewset will add a 'Create' tab containing that form, allowing users to create new objects within the chooser.
+
+For a model-based chooser, this form class should be a `ModelForm`, and the form will be shown for all users with 'create' permission on the corresponding model. As a shortcut, a `fields` list can be specified in place of `form_class`.
+
+```python
+class PersonChooserViewSet(ModelChooserViewSet):
+    # ...
+    fields = ['first_name', 'last_name', 'job_title']
+```
+
+For a Django REST Framework-based chooser, `form_class` must be defined explicitly (i.e. the `fields` shortcut is not available) and the object will be created by sending a POST request to the API endpoint consisting of the form's `cleaned_data` in JSON format. An API-based equivalent of `PersonChooserViewSet` would be:
+
+```python
+from django import forms
+from django.contrib.admin.utils import quote
+from django import forms
+from django.urls import reverse
+from django.utils.translation import ugettext_lazy as _
+
+from generic_chooser.views import DRFChooserMixin, DRFChooserViewSet
+
+
+class PersonChooserMixin(DRFChooserMixin):
+    def get_edit_item_url(self, item):
+        return reverse('wagtailsnippets:edit', args=('base', 'people', quote(item['id'])))
+
+    def get_object_string(self, item):
+        return "%s %s" % (item['first_name'], item['last_name'])
+
+
+class PersonForm(forms.Form):
+    first_name = forms.CharField(required=True)
+    last_name = forms.CharField(required=True)
+    job_title = forms.CharField(required=True)
+
+
+class PersonChooserViewSet(DRFChooserViewSet):
+    icon = 'user'
+    api_base_url = 'http://localhost:8000/people-api/'
+    page_title = _("Choose a person")
+    per_page = 10
+    form_class = PersonForm
+
+    chooser_mixin_class = PersonChooserMixin
+    prefix = 'person-chooser'
+```
+
+This example requires the API to be configured with write access enabled, which can be done with a setting such as the following:
+
+```python
+REST_FRAMEWORK = {
+    # Allow unauthenticated write access to the API. You probably don't want to this in production!
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny'
+    ],
+
+    'DEFAULT_PAGINATION_CLASS': 'wagtail.api.v2.pagination.WagtailPagination',
+    'PAGE_SIZE': 100,
+}
+```
+
 ### Customising chooser views
 
 If the configuration options on `ModelChooserViewSet` and `DRFChooserViewSet` are not sufficient, it's possible to fully customise the chooser behaviour by overriding methods. To do this you'll need to work with the individual class-based views and mixins that make up the viewsets - this is best done by referring to the base implementations in `generic_chooser/views.py`. The classes are:
@@ -92,6 +155,7 @@ If the configuration options on `ModelChooserViewSet` and `DRFChooserViewSet` ar
 * `ChooserListingTabMixin` - handles the behaviour and rendering of the results listing tab, including pagination and searching.
 * `ChooserCreateTabMixin` - handles the behaviour and rendering of the 'create' form tab
 * `ModelChooserCreateTabMixin` - version of `ChooserCreateTabMixin` for model forms
+* `DRFChooserCreateTabMixin` - version of `ChooserCreateTabMixin` for Django REST Framework
 * `BaseChooseView` - abstract class-based view handling the main chooser UI. Subclasses should extend this and include the mixins `ChooserMixin`, `ChooserListingTabMixin` and `ChooserCreateTabMixin` (or suitable subclasses of them).
 * `ModelChooseView`, `DRFChooseView` - model-based and DRF-based subclasses of `BaseChooseView`
 * `BaseChosenView` - class-based view that returns the chosen object as a JSON response

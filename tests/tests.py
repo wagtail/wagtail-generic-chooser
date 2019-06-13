@@ -7,6 +7,8 @@ from django.test import TestCase
 
 from wagtail.core.models import Page, Site
 
+from .models import Person
+
 
 class TestChooseView(TestCase):
     def setUp(self):
@@ -261,7 +263,8 @@ class FakeResponse:
 
 class FakeRequestsTestCase(TestCase):
     """
-    a TestCase class that patches requests.get to forward HTTP requests to the Django test client
+    a TestCase class that patches requests.get and requests.post to forward HTTP requests to the
+    Django test client
     """
 
     def setUp(self):
@@ -277,11 +280,27 @@ class FakeRequestsTestCase(TestCase):
             response = self.client.get(path)
             return FakeResponse(response.content)
 
+        def fake_requests_post(url_string, **kwargs):
+            url = urlparse(url_string)
+            assert(url.scheme == 'http')
+            assert(url.netloc == 'testserver')
+
+            if 'json' not in kwargs:
+                raise Exception("non-JSON posts not supported")
+
+            response = self.client.post(
+                url.path, data=json.dumps(kwargs['json']), content_type='application/json'
+            )
+            return FakeResponse(response.content)
+
         self.requests_get_patcher = patch('requests.get', new=fake_requests_get)
         self.requests_get_patcher.start()
+        self.requests_post_patcher = patch('requests.post', new=fake_requests_post)
+        self.requests_post_patcher.start()
 
     def tearDown(self):
         self.requests_get_patcher.stop()
+        self.requests_post_patcher.stop()
 
 
 class TestAPIChooseView(FakeRequestsTestCase):
@@ -416,4 +435,71 @@ class TestAPIChosenView(FakeRequestsTestCase):
         self.assertEqual(
             response_json['result'],
             {"id": "2", "string": "Welcome to your new Wagtail site!", "edit_link": "/admin/pages/2/edit/"}
+        )
+
+
+class TestAPICreateForm(FakeRequestsTestCase):
+    def setUp(self):
+        super().setUp()
+        User.objects.create_superuser(username='admin', email='admin@example.com', password='password')
+        self.assertTrue(
+            self.client.login(username='admin', password='password')
+        )
+
+    def test_get(self):
+        response = self.client.get('/admin/person-chooser/')
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content)
+        self.assertEqual(response_json['step'], 'choose')
+
+        # Create form should be displayed
+        response_json = json.loads(response.content)
+        self.assertInHTML(
+            '<a href="#person-chooser-create">Create</a>',
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<input type="text" name="person-chooser-create-form-first_name" required id="id_person-chooser-create-form-first_name">',
+            response_json['html']
+        )
+
+    def test_post_invalid(self):
+        response = self.client.post('/admin/person-chooser/', {
+            'person-chooser-create-form-first_name': 'Bob',
+            'person-chooser-create-form-last_name': '',
+            'person-chooser-create-form-job_title': 'Builder',
+        })
+        self.assertEqual(response.status_code, 200)
+
+        # should be returned to the chooser view (step=choose) with a validation error
+        # and the Create tab active
+        response_json = json.loads(response.content)
+        self.assertEqual(response_json['step'], 'choose')
+
+        self.assertInHTML(
+            '<li class="active"><a href="#person-chooser-create">Create</a></li>',
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<span>This field is required.</span>',
+            response_json['html']
+        )
+
+    def test_post_valid(self):
+        response = self.client.post('/admin/person-chooser/', {
+            'person-chooser-create-form-first_name': 'Gordon',
+            'person-chooser-create-form-last_name': 'Ramsay',
+            'person-chooser-create-form-job_title': 'Chef',
+        })
+        self.assertEqual(response.status_code, 200)
+
+        # Person should be created
+        person = Person.objects.get(first_name='Gordon')
+
+        # should receive a step=chosen response
+        response_json = json.loads(response.content)
+        self.assertEqual(response_json['step'], 'chosen')
+        self.assertEqual(
+            response_json['result'],
+            {"id": str(person.id), "string": "Gordon Ramsay", "edit_link": None}
         )
