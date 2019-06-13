@@ -4,6 +4,7 @@ from django.conf.urls import url
 from django.contrib.admin.utils import quote, unquote
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Page, Paginator
+from django.forms import models as model_forms
 from django.http import Http404
 from django.shortcuts import render
 from django.urls import reverse
@@ -15,6 +16,7 @@ from django.views.generic.base import ContextMixin
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
 from wagtail.admin.viewsets.base import ViewSet
+from wagtail.core.permission_policies import ModelPermissionPolicy
 from wagtail.search.backends import get_search_backend
 from wagtail.search.index import class_is_indexed
 
@@ -98,13 +100,17 @@ class ChooserMixin:
     # objects of the type being chosen here
     permission_policy = None
 
+    def get_permission_policy(self):
+        return self.permission_policy
+
     def user_can_create(self, user):
         """
         Return True iff the given user has permission to create objects of the type being
         chosen here
         """
-        if self.permission_policy:
-            return self.permission_policy.user_has_permission(user, 'add')
+        permission_policy = self.get_permission_policy()
+        if permission_policy:
+            return permission_policy.user_has_permission(user, 'add')
         else:
             return False
 
@@ -166,6 +172,14 @@ class ModelChooserMixin(ChooserMixin):
 
     model = None
     order_by = None
+
+    def get_permission_policy(self):
+        # if no permission policy is specified, use ModelPermissionPolicy
+        # (which enforces standard Django model permissions)
+        if not self.permission_policy:
+            self.permission_policy = ModelPermissionPolicy(self.model)
+
+        return self.permission_policy
 
     @property
     def is_searchable(self):
@@ -330,11 +344,88 @@ class ChooserListingTabMixin:
         return context
 
 
-class ChooseView(ChooserMixin, ChooserListingTabMixin, ModalPageFurnitureMixin, ContextMixin, View):
+class ChooserCreateTabMixin:
+    create_tab_label = _("Create")
+    create_tab_template = 'generic_chooser/_create_tab.html'
+    create_form_submit_label = _("Create")
+    create_form_is_long_running = False
+    create_form_submitted_label = _("Uploading…")
+
+    initial = {}
+    form_class = None
+
+    def get_initial(self):
+        """Return the initial data to use for forms on this view."""
+        return self.initial.copy()
+
+    def get_form_class(self):
+        return self.form_class
+
+    def get_form(self, form_class=None):
+        """Return an instance of the form to be used in this view."""
+        if form_class is None:
+            form_class = self.get_form_class()
+        return form_class(**self.get_form_kwargs())
+
+    def get_form_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        kwargs = {
+            'initial': self.get_initial(),
+            'prefix': self.get_prefix() + '-create-form',
+        }
+
+        if self.request.method in ('POST', 'PUT'):
+            kwargs.update({
+                'data': self.request.POST,
+                'files': self.request.FILES,
+            })
+        return kwargs
+
+    def create_form_is_available(self):
+        if self.get_form_class() is None:
+            return False
+
+        if not self.user_can_create(self.request.user):
+            return False
+
+        return True
+
+    def get_create_tab_context_data(self):
+        context = {
+            'create_form_submit_label': self.create_form_submit_label,
+            'create_form_is_long_running': self.create_form_is_long_running,
+            'create_form_submitted_label': self.create_form_submitted_label,
+            'create_form': self.get_form(),
+        }
+
+        return context
+
+
+class ModelChooserCreateTabMixin(ChooserCreateTabMixin):
+    fields = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Set a nicer default submit button label, based on the model name
+        if (self.create_form_submit_label == ChooserCreateTabMixin.create_form_submit_label) and self.model:
+            self.create_form_submit_label = _("Add %s") % self.model._meta.verbose_name
+
+    def get_form_class(self):
+        if (self.fields is not None) and not self.form_class:
+            self.form_class = model_forms.modelform_factory(self.model, fields=self.fields)
+
+        return self.form_class
+
+
+class BaseChooseView(ModalPageFurnitureMixin, ContextMixin, View):
     icon = 'snippet'
     page_title = _("Choose")
 
     template = 'generic_chooser/tabbed_modal.html'
+
+    def get_template(self):
+        return self.template
 
     def get(self, request):
         # 'results=true' URL param indicates we should only render the results partial
@@ -357,7 +448,10 @@ class ChooseView(ChooserMixin, ChooserListingTabMixin, ModalPageFurnitureMixin, 
 
         # skip setting the full tabbed-interface context if we're only returning the results
         # partial
-        if not results_only:
+        if results_only:
+            context.update(self.get_listing_tab_context_data())
+            return context
+        else:
             prefix = self.get_prefix()
             listing_tab_id = '%s-search' % prefix
             context.update({
@@ -371,15 +465,21 @@ class ChooseView(ChooserMixin, ChooserListingTabMixin, ModalPageFurnitureMixin, 
                 'active_tab': listing_tab_id,
             })
 
-        context.update(self.get_listing_tab_context_data())
+            context.update(self.get_listing_tab_context_data())
 
-        return context
+            if self.create_form_is_available():
+                create_tab_id = '%s-create' % prefix
+                context['tabs'].append({
+                    'label': self.create_tab_label,
+                    'id': create_tab_id,
+                    'template': self.create_tab_template,
+                })
+                context.update(self.get_create_tab_context_data())
 
-    def get_template(self):
-        return self.template
+            return context
 
 
-class ModelChooseView(ModelChooserMixin, ChooseView):
+class ModelChooseView(ChooserMixin, ChooserListingTabMixin, ModelChooserCreateTabMixin, BaseChooseView):
     pass
 
 
@@ -402,11 +502,11 @@ class APIPaginator(Paginator):
         return self._count
 
 
-class DRFChooseView(DRFChooserMixin, ChooseView):
+class DRFChooseView(DRFChooserMixin, ChooserListingTabMixin, ChooserCreateTabMixin, BaseChooseView):
     pass
 
 
-class ChosenView(ChooserMixin, View):
+class BaseChosenView(View):
     def get(self, request, pk):
         try:
             item = self.get_object(unquote(pk))
@@ -416,18 +516,20 @@ class ChosenView(ChooserMixin, View):
         return self.get_chosen_response(item)
 
 
-class ModelChosenView(ModelChooserMixin, ChosenView):
+class ModelChosenView(ModelChooserMixin, BaseChosenView):
     pass
 
 
-class DRFChosenView(DRFChooserMixin, ChosenView):
+class DRFChosenView(DRFChooserMixin, BaseChosenView):
     pass
 
 
 class ChooserViewSet(ViewSet):
-    base_choose_view_class = ChooseView
-    base_chosen_view_class = ChosenView
+    base_choose_view_class = BaseChooseView
+    base_chosen_view_class = BaseChosenView
     chooser_mixin_class = ChooserMixin
+    listing_tab_mixin_class = ChooserListingTabMixin
+    create_tab_mixin_class = ChooserCreateTabMixin
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -435,7 +537,10 @@ class ChooserViewSet(ViewSet):
         # compose a final ChooseView subclass from base_choose_view_class and chooser_mixin_class
         self.choose_view_class = type(
             'ChooserViewSetChooseView',
-            (self.chooser_mixin_class, self.base_choose_view_class),
+            (
+                self.chooser_mixin_class, self.listing_tab_mixin_class,
+                self.create_tab_mixin_class, self.base_choose_view_class
+            ),
             {}
         )
 
@@ -452,7 +557,7 @@ class ChooserViewSet(ViewSet):
             'chosen_url_name': self.get_url_name('chosen'),
         }
 
-        for attr_name in ('icon', 'page_title', 'per_page', 'is_searchable'):
+        for attr_name in ('icon', 'page_title', 'per_page', 'is_searchable', 'form_class'):
             if hasattr(self, attr_name):
                 attrs[attr_name] = getattr(self, attr_name)
 
@@ -484,13 +589,13 @@ class ChooserViewSet(ViewSet):
 
 class ModelChooserViewSet(ChooserViewSet):
     chooser_mixin_class = ModelChooserMixin
+    create_tab_mixin_class = ModelChooserCreateTabMixin
 
     def get_choose_view_attrs(self):
         attrs = super().get_choose_view_attrs()
-        if hasattr(self, 'model'):
-            attrs['model'] = self.model
-        if hasattr(self, 'order_by'):
-            attrs['order_by'] = self.order_by
+        for attr_name in ('model', 'order_by', 'fields'):
+            if hasattr(self, attr_name):
+                attrs[attr_name] = getattr(self, attr_name)
 
         return attrs
 

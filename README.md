@@ -42,6 +42,7 @@ class PersonChooserViewSet(ModelChooserViewSet):
     page_title = _("Choose a person")
     per_page = 10
     order_by = 'first_name'
+    fields = ['first_name', 'last_name', 'job_title']
 ```
 
 The viewset can then be registered through Wagtail's `register_admin_viewset` hook:
@@ -89,10 +90,12 @@ If the configuration options on `ModelChooserViewSet` and `DRFChooserViewSet` ar
 * `ModelChooserMixin` - implementation of `ChooserMixin` using a Django model as the data source.
 * `DRFChooserMixin` - implementation of `ChooserMixin` using a Django REST Framework endpoint as the data source.
 * `ChooserListingTabMixin` - handles the behaviour and rendering of the results listing tab, including pagination and searching.
-* `ChooseView` - class-based view providing the main chooser UI (currently only the results listing tab, but will in future be extended to support a 'create object' tab).
-* `ModelChooseView`, `DRFChooseView` - model-based and DRF-based subclasses of `ChooseView`
-* `ChosenView` - class-based view that returns the chosen object as a JSON response
-* `ModelChosenView`, `DRFChosenView` - model-based and DRF-based subclasses of `ChosenView`
+* `ChooserCreateTabMixin` - handles the behaviour and rendering of the 'create' form tab
+* `ModelChooserCreateTabMixin` - version of `ChooserCreateTabMixin` for model forms
+* `BaseChooseView` - abstract class-based view handling the main chooser UI. Subclasses should extend this and include the mixins `ChooserMixin`, `ChooserListingTabMixin` and `ChooserCreateTabMixin` (or suitable subclasses of them).
+* `ModelChooseView`, `DRFChooseView` - model-based and DRF-based subclasses of `BaseChooseView`
+* `BaseChosenView` - class-based view that returns the chosen object as a JSON response
+* `ModelChosenView`, `DRFChosenView` - model-based and DRF-based subclasses of `BaseChosenView`
 * `ChooserViewSet` - common base implementation of `ModelChooserViewSet` and `DRFChooserViewSet`
 
 For example, we may want to extend the PersonChooserViewSet above to return an 'edit this person' URL as part of its JSON response, pointing to the `'wagtailsnippets:edit'` view. Including an 'edit' URL in the response would normally be achieved by setting the `edit_item_url_name` attribute on the viewset to a suitable URL route name, but `'wagtailsnippets:edit'` won't work here; this is because `edit_item_url_name` expects it to take a single URL parameter, the ID, whereas the snippet edit view also needs to be passed the model's app name and model name. Instead, we can do this by overriding the `get_edit_item_url` method on `ModelChooserMixin`:

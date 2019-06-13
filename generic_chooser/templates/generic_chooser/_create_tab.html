@@ -1,0 +1,21 @@
+<form class="create-form" action="{{ choose_url }}" method="POST" {% if create_form.is_multipart %}enctype="multipart/form-data"{% endif %} novalidate>
+    {% csrf_token %}
+    {% block hidden_fields %}
+        {% for field in create_form.hidden_fields %}{{ field }}{% endfor %}
+    {% endblock %}
+
+    <ul class="fields">
+        {% block visible_fields %}
+            {% for field in create_form.visible_fields %}
+                {% include "wagtailadmin/shared/field_as_li.html" %}
+            {% endfor %}
+        {% endblock %}
+        <li>
+            {% if create_form_is_long_running %}
+                <button type="submit" class="button button-longrunning" data-clicked-text="{{ create_form_submitted_label }}"><span class="icon icon-spinner"></span><em>{{ create_form_submit_label }}</em></button>
+            {% else %}
+                <button type="submit" class="button">{{ create_form_submit_label }}</button>
+            {% endif %}
+        </li>
+    </ul>
+</form>
