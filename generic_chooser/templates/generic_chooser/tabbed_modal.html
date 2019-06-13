@@ -1,7 +1,7 @@
 {% if tabs|length == 1 %}
     {% include "wagtailadmin/shared/header.html" with title=page_title icon=icon tabbed=0 merged=0 %}
 
-    <div class="nice-padding">
+    <div class="{% if tab.classname %}{{ tab.classname }} {% endif %}nice-padding">
         {% include tabs.0.template %}
     </div>
 {% else %}
@@ -15,7 +15,7 @@
 
     <div class="tab-content">
         {% for tab in tabs %}
-            <section id="{{ tab.id }}" class="{% if tab.id == active_tab %}active {% endif %}nice-padding">
+            <section id="{{ tab.id }}" class="{% if tab.classname %}{{ tab.classname }} {% endif %}{% if tab.id == active_tab %}active {% endif %}nice-padding">
                 {% include tab.template %}
             </section>
         {% endfor %}

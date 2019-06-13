@@ -64,6 +64,27 @@ GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS = {
             return false;
         }
 
+        $('form.create-form', modal.body).on('submit', function() {
+            var formdata = new FormData(this);
+
+            $.ajax({
+                url: this.action,
+                data: formdata,
+                processData: false,
+                contentType: false,
+                type: 'POST',
+                dataType: 'text',
+                success: modal.loadResponseText,
+                error: function(response, textStatus, errorThrown) {
+                    message = jsonData['error_message'] + '<br />' + errorThrown + ' - ' + response.status;
+                    $('.create-section', modal.body).append(
+                        '<div class="help-block help-critical">' +
+                        '<strong>' + jsonData['error_label'] + ': </strong>' + message + '</div>');
+                }
+            });
+
+            return false;
+        });
     },
     'chosen': function(modal, jsonData) {
         modal.respond('chosen', jsonData['result']);
