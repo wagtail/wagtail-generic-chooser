@@ -473,6 +473,7 @@ class BaseChooseView(ModalPageFurnitureMixin, ContextMixin, View):
                     'label': self.create_tab_label,
                     'id': create_tab_id,
                     'template': self.create_tab_template,
+                    'classname': 'create-section',
                 })
                 context.update(self.get_create_tab_context_data())
 
