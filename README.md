@@ -12,9 +12,9 @@ Wagtail 2.4 or higher
 
 ## Installation
 
-(no PyPI package available just yet)
+Run: `pip install wagtail-generic-chooser`
 
-Check out this repository and run `pip install -e .` from the root, or copy the `generic_chooser` app into your project. Then add `generic_chooser` to your project's `INSTALLED_APPS`.
+Then add `generic_chooser` to your project's `INSTALLED_APPS`.
 
 ## Usage
 

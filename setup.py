@@ -20,7 +20,7 @@ setup(
         matching Wagtail's built-in choosers and backed by either models or a REST API
     """,
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
