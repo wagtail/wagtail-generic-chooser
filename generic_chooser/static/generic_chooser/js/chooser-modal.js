@@ -35,7 +35,7 @@ GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS = {
             return false;
         }
 
-        $('form.snippet-search', modal.body).on('submit', search);
+        $('form.chooser-search', modal.body).on('submit', search);
 
         $('#id_q').on('input', function() {
             if(searchRequest) {
