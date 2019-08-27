@@ -275,6 +275,7 @@ class ChooserListingTabMixin:
 
     listing_tab_template = 'generic_chooser/_listing_tab.html'
     results_template = 'generic_chooser/_results.html'
+    list_fields = ['title']
 
     def get_page_number_from_url(self):
         try:
@@ -298,11 +299,19 @@ class ChooserListingTabMixin:
             yield self.get_row_data(item)
 
     def get_row_data(self, item):
+        fields = []
+        for field in self.get_list_fields():
+            fields.append({field:"%s" % getattr(item, field)})
+
         return {
             'choose_url': self.get_chosen_url(item),
             'title': self.get_object_string(item),
+            'fields': fields,
         }
 
+    def get_list_fields(self):
+        return self.list_fields
+    
     def get_results_template(self):
         return self.results_template
 
@@ -327,6 +336,7 @@ class ChooserListingTabMixin:
 
         context = {
             'rows': self.get_rows(),
+            'fields': self.get_list_fields(),
             'results_template': self.get_results_template(),
             'is_searchable': self.is_searchable,
             'choose_url': self.get_choose_url(),

@@ -6,15 +6,25 @@
     <col width="16%" />
     <thead>
         <tr class="table-headers">
-            <th>{% trans "Title" %}</th>
+            {% for field in fields %}
+                <th>{% trans field %}</th>
+            {% endfor %}
         </tr>
     </thead>
     <tbody>
         {% for row in rows %}
             <tr>
-                <td class="title">
-                    <h2><a class="item-choice" href="{{ row.choose_url }}">{{ row.title }}</a></h2>
-                </td>
+                {% for field in row.fields %}
+                    {% for key, value in field.items %}
+                        <td class="{{ key }}">
+                            {% if forloop.parentloop.first %}
+                                <h2><a class="item-choice" href="{{ row.choose_url }}">{{ value }}</a></h2>
+                            {% else %}
+                                <h2>{{ value }}</h2>
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                {% endfor %}
             </tr>
         {% endfor %}
     </tbody>
