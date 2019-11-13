@@ -1,4 +1,4 @@
-0.1.1 (xxxx-xx-xx)
+0.1.1 (2019-11-13)
 ------------------
 
 * Fixed search button (Allan Brown)
