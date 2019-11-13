@@ -9,7 +9,7 @@ setup(
     author='Matthew Westcott',
     author_email='matthew.westcott@torchbox.com',
     url='https://github.com/gasman/wagtail-generic-chooser',
-    packages=find_packages(),
+    packages=find_packages(exclude=("tests", "tests.*")),
     include_package_data=True,
     install_requires=[
         'requests>=2.11.1,<3.0',
