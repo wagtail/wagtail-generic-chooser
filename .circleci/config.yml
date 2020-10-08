@@ -1,0 +1,26 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@0.2.1
+
+jobs:
+  build-and-test:
+    executor: python/default
+    steps:
+      - checkout
+      - restore_cache:
+          key: pip-{{ .Branch }}
+      - run: pip install wagtail
+      - run: pip install -e .
+      - save_cache:
+          key: pip-{{ .Branch }}
+          paths:
+            - "~/.cache/pip"
+      - run:
+          command: ./runtests.py
+          name: Test
+
+workflows:
+  main:
+    jobs:
+      - build-and-test
