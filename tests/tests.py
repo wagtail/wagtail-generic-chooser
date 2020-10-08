@@ -5,6 +5,7 @@ from unittest.mock import patch
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
+from wagtail import VERSION as WAGTAIL_VERSION
 from wagtail.core.models import Page, Site
 
 from .models import Person
@@ -26,10 +27,21 @@ class TestChooseView(TestCase):
 
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
-        self.assertInHTML(
-            '<h1 class="icon icon-site">Choose a site</h1>',
-            response_json['html']
-        )
+        if WAGTAIL_VERSION >= (2, 10):
+            self.assertIn(
+                'Choose a site',
+                response_json['html']
+            )
+            self.assertInHTML(
+                '<use href="#icon-site"></use>',
+                response_json['html']
+            )
+        else:
+            self.assertInHTML(
+                '<h1 class="icon icon-site">Choose a site</h1>',
+                response_json['html']
+            )
+
         self.assertInHTML(
             '<a class="item-choice" href="/admin/site-chooser/1/">localhost [default]</a>',
             response_json['html']
@@ -320,10 +332,20 @@ class TestAPIChooseView(FakeRequestsTestCase):
 
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
-        self.assertInHTML(
-            '<h1 class="icon icon-page">Choose a page</h1>',
-            response_json['html']
-        )
+        if WAGTAIL_VERSION >= (2, 10):
+            self.assertIn(
+                'Choose a page',
+                response_json['html']
+            )
+            self.assertInHTML(
+                '<use href="#icon-page"></use>',
+                response_json['html']
+            )
+        else:
+            self.assertInHTML(
+                '<h1 class="icon icon-page">Choose a page</h1>',
+                response_json['html']
+            )
         self.assertInHTML(
             '<a class="item-choice" href="/admin/api-page-chooser/%d/">A red page</a>' % red_page.id,
             response_json['html']
