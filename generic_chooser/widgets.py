@@ -2,7 +2,7 @@ import json
 
 from django.contrib.admin.utils import quote
 from django.core.exceptions import ObjectDoesNotExist
-from django.forms import widgets
+from django.forms import widgets, Media
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -210,3 +210,31 @@ class DRFChooser(AdminChooser):
             return None
         else:
             return reverse(self.edit_item_url_name, args=(instance['id'],))
+
+
+class LinkedFieldMixin:
+    """
+    Allows a chooser widget to accept a `linked_fields` kwarg which defines a
+    set of form inputs on the calling page that will have their values
+    extracted and passed to the modal URL when opening the chooser URL.
+    For example:
+        PersonChooser(linked_fields={
+            'country': '#id_country'
+        })
+    will retrieve the value of the form input matching the selector '#id_country'
+    and pass that to the chooser modal as the URL parameter 'country'.
+    """
+    def __init__(self, *args, **kwargs):
+        self.linked_fields = kwargs.pop('linked_fields', {})
+        super().__init__(*args, **kwargs)
+
+    def render_js_init(self, id_, name, value):
+        opts = {'linkedFields': self.linked_fields}
+        return "new LinkedFieldChooserWidget({0}, {1});".format(json.dumps(id_), json.dumps(opts))
+
+    @property
+    def media(self):
+        return super().media + Media(js=[
+            'generic_chooser/js/chooser-widget.js',
+            'generic_chooser/js/linked-field-chooser-widget.js',
+        ])
