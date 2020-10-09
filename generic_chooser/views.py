@@ -1,4 +1,5 @@
 import requests
+import urllib
 
 from django.conf.urls import url
 from django.contrib.admin.utils import quote, unquote
@@ -42,6 +43,8 @@ class ChooserMixin:
     Helper methods common to all sub-views of the chooser modal. Will be subclassed to implement
     different data sources (e.g. database versus REST API).
     """
+    # URL parameters to be passed on from the initial URL in the result of get_choose_url
+    preserve_url_parameters = []
 
     def get_object(self, pk):
         """
@@ -72,7 +75,23 @@ class ChooserMixin:
     choose_url_name = None
 
     def get_choose_url(self):
-        return reverse(self.choose_url_name)
+        url = reverse(self.choose_url_name)
+
+        params = {}
+        for param in self.preserve_url_parameters:
+            try:
+                params[param] = self.request.GET[param]
+            except KeyError:
+                pass
+
+        if params:
+            param_string = urllib.parse.urlencode(params)
+            if '?' in url:
+                url += '&' + param_string
+            else:
+                url += '?' + param_string
+
+        return url
 
     # URL route name for the 'item chosen' view (required) - should return the URL of that view
     # when reversed with one argument, the instance ID. If no suitable URL route exists, subclasses
