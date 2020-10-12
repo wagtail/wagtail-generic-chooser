@@ -9,6 +9,11 @@ def register_site_chooser_viewset():
 
 
 @hooks.register('register_admin_viewset')
+def register_site_chooser_viewset():
+    return views.NameOrderedSiteChooserViewSet('name_ordered_site_chooser', url_prefix='name-ordered-site-chooser')
+
+
+@hooks.register('register_admin_viewset')
 def register_page_chooser_viewset():
     return views.PageChooserViewSet('page_chooser', url_prefix='page-chooser')
 
