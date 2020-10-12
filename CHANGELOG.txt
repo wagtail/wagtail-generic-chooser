@@ -2,6 +2,7 @@
 ------------------
 
 * Exclude "tests" package from the installation.
+* Model chooser views now accept a list of fields as order_by
 
 0.1.1 (2019-11-13)
 ------------------

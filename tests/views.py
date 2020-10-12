@@ -9,7 +9,17 @@ class SiteChooserViewSet(ModelChooserViewSet):
     page_title = "Choose a site"
     per_page = 10
     edit_item_url_name = 'wagtailsites:edit'
-    order_by = 'hostname'
+    order_by = ['hostname', 'port']
+    fields = ['hostname', 'port', 'site_name', 'root_page', 'is_default_site']
+
+
+class NameOrderedSiteChooserViewSet(ModelChooserViewSet):
+    model = Site
+    icon = 'site'
+    page_title = "Choose a site"
+    per_page = 10
+    edit_item_url_name = 'wagtailsites:edit'
+    order_by = 'site_name'
     fields = ['hostname', 'port', 'site_name', 'root_page', 'is_default_site']
 
 

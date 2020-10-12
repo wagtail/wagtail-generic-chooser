@@ -191,7 +191,10 @@ class ModelChooserMixin(ChooserMixin):
     def get_unfiltered_object_list(self):
         objects = self.model.objects.all()
         if self.order_by:
-            objects = objects.order_by(self.order_by)
+            if isinstance(self.order_by, str):
+                objects = objects.order_by(self.order_by)
+            else:
+                objects = objects.order_by(*self.order_by)
         return objects
 
     def get_object_list(self, search_term=None, **kwargs):

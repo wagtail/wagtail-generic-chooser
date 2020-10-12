@@ -47,6 +47,14 @@ class TestChooseView(TestCase):
             response_json['html']
         )
 
+    def test_get_with_single_item_order_by(self):
+        self.assertTrue(
+            self.client.login(username='admin', password='password')
+        )
+
+        response = self.client.get('/admin/name-ordered-site-chooser/')
+        self.assertEqual(response.status_code, 200)
+
     def test_pagination(self):
         self.assertTrue(
             self.client.login(username='admin', password='password')
