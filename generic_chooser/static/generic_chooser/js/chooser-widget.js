@@ -9,6 +9,7 @@ function ChooserWidget(id, opts) {
     opts = opts || {};
     var self = this;
 
+    this.id = id;
     this.chooserElement = $('#' + id + '-chooser');
     this.titleElement = this.chooserElement.find('.title');
     this.inputElement = $('#' + id);
