@@ -9,7 +9,7 @@ from django.http import Http404
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.text import camel_case_to_spaces, slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic.base import ContextMixin
 
