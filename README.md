@@ -29,7 +29,7 @@ At minimum, a chooser can be implemented by subclassing `ModelChooserViewSet` an
 ```python
 # myapp/views.py
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from generic_chooser.views import ModelChooserViewSet
 
@@ -65,7 +65,7 @@ def register_person_chooser_viewset():
 The `generic_chooser.views` module also provides a viewset class `DRFChooserViewSet` for building choosers based on Django REST Framework API endpoints. Subclasses need to specify an `api_base_url` attribute. For example, an API-based chooser for Wagtail's Page model can be implemented as follows:
 
 ```python
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from generic_chooser.views import DRFChooserViewSet
 
@@ -101,7 +101,7 @@ from django import forms
 from django.contrib.admin.utils import quote
 from django import forms
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from generic_chooser.views import DRFChooserMixin, DRFChooserViewSet
 
@@ -167,7 +167,7 @@ For example, we may want to extend the PersonChooserViewSet above to return an '
 ```python
 from django.contrib.admin.utils import quote
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from generic_chooser.views import ModelChooserMixin, ModelChooserViewSet
 
@@ -196,7 +196,7 @@ The `generic_chooser.widgets` module provides an `AdminChooser` widget to be sub
 ```python
 from django.contrib.admin.utils import quote
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from generic_chooser.widgets import AdminChooser
 
