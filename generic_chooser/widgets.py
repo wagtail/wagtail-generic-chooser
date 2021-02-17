@@ -31,10 +31,18 @@ class AdminChooser(WidgetWithScript, widgets.Input):
     choose_another_text = _("Choose another item")
     clear_choice_text = _("Clear choice")
     link_to_chosen_text = _("Edit this item")
+    link_to_create_text = _("Create an item")
     show_edit_link = True
+    show_create_link = True
+
     classname = None  # CSS class for the top-level element
 
     model = None
+
+    # URL route name for creating a new item - should return the URL of the item's create view when
+    # reversed with no arguments.  If no suitable URL route exists (e.g. it requires additional
+    # arguments), subclasses can override get_create_item_url instead.
+    create_item_url_name = None
 
     # URL route name for editing an existing item - should return the URL of the item's edit view
     # when reversed with the item's quoted PK as its only argument. If no suitable URL route exists
@@ -57,6 +65,12 @@ class AdminChooser(WidgetWithScript, widgets.Input):
     def get_instance(self, value):
         return self.model.objects.get(pk=value)
 
+    def get_create_item_url(self):
+        if self.create_item_url_name is None:
+            return None
+        else:
+            return reverse(self.create_item_url_name)
+    
     def get_edit_item_url(self, instance):
         if self.edit_item_url_name is None:
             return None
@@ -128,6 +142,7 @@ class AdminChooser(WidgetWithScript, widgets.Input):
             'is_empty': value_data['value'] is None,
             'title': value_data['title'],
             'edit_item_url': value_data['edit_item_url'],
+            'create_item_url': self.get_create_item_url(),
             'choose_modal_url': self.get_choose_modal_url(),
         })
 
