@@ -21,11 +21,17 @@
             {% if widget.show_edit_link and edit_item_url %}
                 <li><a href="{{ edit_item_url }}" class="edit-link button button-small button-secondary" target="_blank" rel="noopener noreferrer">{{ widget.link_to_chosen_text }}</a></li>
             {% endif %}
+            {% if widget.show_create_link and create_item_url %}
+                <li><a href="{{ create_item_url }}" class="create-link button button-small button-secondary" target="_blank" rel="noopener noreferrer">{{ widget.link_to_create_text }}</a></li>
+            {% endif %}
         </ul>
     </div>
 
     <div class="unchosen">
         <button type="button" class="button action-choose button-small button-secondary">{{ widget.choose_one_text }}</button>
+        {% if widget.show_create_link and create_item_url %}
+            <a href="{{ create_item_url }}" class="edit-link button button-small button-secondary" target="_blank" rel="noopener noreferrer">{{ widget.link_to_create_text }}</a>
+        {% endif %}
     </div>
 
 </div>
