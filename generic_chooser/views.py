@@ -573,7 +573,6 @@ class DRFChosenView(DRFChooserMixin, BaseChosenView):
 
 class ChooserViewSet(ViewSet):
     base_choose_view_class = BaseChooseView
-    base_chosen_view_class = BaseChosenView
     chooser_mixin_class = ChooserMixin
     listing_tab_mixin_class = ChooserListingTabMixin
     create_tab_mixin_class = ChooserCreateTabMixin
