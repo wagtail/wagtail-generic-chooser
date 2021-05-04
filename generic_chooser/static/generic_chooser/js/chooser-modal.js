@@ -39,7 +39,7 @@ GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS = {
 
         $('#id_q').on('input', function() {
             if(searchRequest) {
-                request.abort();
+                searchRequest.abort();
             }
             clearTimeout($.data(this, 'timer'));
             var wait = setTimeout(search, 50);
