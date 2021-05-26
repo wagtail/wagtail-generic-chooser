@@ -12,6 +12,10 @@ function createChooserWidget(id, opts) {
     var docTitle = chooserElement.find('.title');
     var input = $('#' + id);
     var editLink = chooserElement.find('.edit-link');
+    var editLinkWrapper = chooserElement.find('.edit-link-wrapper');
+    if (!editLink.attr('href')) {
+        editLinkWrapper.hide();
+    }
     var chooseButton = $('.action-choose', chooserElement);
 
     var widget = {
@@ -31,7 +35,12 @@ function createChooserWidget(id, opts) {
                 input.val(newState.value);
                 docTitle.text(newState.title);
                 chooserElement.removeClass('blank');
-                editLink.attr('href', newState.edit_item_url);
+                if (newState.edit_item_url) {
+                    editLink.attr('href', newState.edit_item_url);
+                    editLinkWrapper.show();
+                } else {
+                    editLinkWrapper.hide();
+                }
             } else {
                 input.val('');
                 chooserElement.addClass('blank');

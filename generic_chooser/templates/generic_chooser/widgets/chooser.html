@@ -18,8 +18,8 @@
                 <li><button type="button" class="button action-clear button-small button-secondary">{{ widget.clear_choice_text }}</button></li>
             {% endif %}
             <li><button type="button" class="button action-choose button-small button-secondary">{{ widget.choose_another_text }}</button></li>
-            {% if widget.show_edit_link and edit_item_url %}
-                <li><a href="{{ edit_item_url }}" class="edit-link button button-small button-secondary" target="_blank" rel="noopener noreferrer">{{ widget.link_to_chosen_text }}</a></li>
+            {% if widget.show_edit_link %}
+                <li class="edit-link-wrapper"><a {% if edit_item_url %}href="{{ edit_item_url }}"{% endif %} class="edit-link button button-small button-secondary" target="_blank" rel="noopener noreferrer">{{ widget.link_to_chosen_text }}</a></li>
             {% endif %}
         </ul>
     </div>
