@@ -198,7 +198,10 @@ class TestChooseView(TestCase):
             'site-chooser-create-form-site_name': 'foo',
             'site-chooser-create-form-root_page': Page.objects.filter(depth=2).first().pk,
         })
-        self.assertEqual(response.status_code, 403)
+        if WAGTAIL_VERSION >= (2, 11):
+            self.assertRedirects(response, '/admin/')
+        else:
+            self.assertEqual(response.status_code, 403)
 
     def test_post_invalid_creation_form(self):
         self.assertTrue(
