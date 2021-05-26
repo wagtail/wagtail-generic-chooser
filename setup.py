@@ -4,11 +4,11 @@ from setuptools import setup, find_packages
 
 setup(
     name='wagtail-generic-chooser',
-    version='0.1.1',
+    version='0.2',
     description="A toolkit for custom chooser popups in Wagtail",
     author='Matthew Westcott',
     author_email='matthew.westcott@torchbox.com',
-    url='https://github.com/gasman/wagtail-generic-chooser',
+    url='https://github.com/wagtail/wagtail-generic-chooser',
     packages=find_packages(exclude=("tests", "tests.*")),
     include_package_data=True,
     install_requires=[
@@ -30,6 +30,9 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Framework :: Django',
         'Framework :: Wagtail',
         'Framework :: Wagtail :: 2',

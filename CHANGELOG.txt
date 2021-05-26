@@ -1,10 +1,12 @@
-0.1.2 (YYYY-MM-DD)
-------------------
+0.2 (2021-05-26)
+----------------
 
+* Add compatibility with Wagtail 2.13 StreamFields
 * Exclude "tests" package from the installation.
 * Model chooser views now accept a list of fields as order_by
 * Fix for Django 3.0 - replace ugettext_lazy with gettext_lazy (Todd Dembrey)
 * Fix JS error in search box rate limiting (Martijn Jacobs)
+* Fix missing 'edit item' button on initially-empty choosers
 
 
 0.1.1 (2019-11-13)
