@@ -12,14 +12,44 @@ function createChooserWidget(id, opts) {
     var docTitle = chooserElement.find('.title');
     var input = $('#' + id);
     var editLink = chooserElement.find('.edit-link');
+    var chooseButton = $('.action-choose', chooserElement);
 
-    $('.action-choose', chooserElement).on('click', function() {
+    var widget = {
+        idForLabel: null,
+        getState: function() {
+            return {
+                'value': input.val(),
+                'title': docTitle.text(),
+                'edit_item_url': editLink.attr('href')
+            };
+        },
+        getValue: function() {
+            return input.val();
+        },
+        setState: function(newState) {
+            if (newState) {
+                input.val(newState.value);
+                docTitle.text(newState.title);
+                chooserElement.removeClass('blank');
+                editLink.attr('href', newState.edit_item_url);
+            } else {
+                input.val('');
+                chooserElement.addClass('blank');
+            }
+        },
+        focus: function() {
+            chooseButton.focus();
+        }
+    };
+
+    chooseButton.on('click', function() {
         var responses = {};
         responses[opts.modalWorkflowResponseName || 'chosen'] = function(snippetData) {
-            input.val(snippetData.id);
-            docTitle.text(snippetData.string);
-            chooserElement.removeClass('blank');
-            editLink.attr('href', snippetData.edit_link);
+            widget.setState({
+                'value': snippetData.id,
+                'title': snippetData.string,
+                'edit_item_url': snippetData.edit_link
+            });
         };
 
         ModalWorkflow({
@@ -30,7 +60,8 @@ function createChooserWidget(id, opts) {
     });
 
     $('.action-clear', chooserElement).on('click', function() {
-        input.val('');
-        chooserElement.addClass('blank');
+        widget.setState(null);
     });
+
+    return widget;
 }
