@@ -13,6 +13,18 @@ from wagtail import VERSION as WAGTAIL_VERSION
 from wagtail.utils.widgets import WidgetWithScript
 
 
+try:
+    from wagtail.core.telepath import register
+    from wagtail.core.widget_adapters import WidgetAdapter
+except ImportError:  # do-nothing fallback for Wagtail <2.13
+
+    def register(adapter, cls):
+        pass
+
+    class WidgetAdapter:
+        pass
+
+
 class AdminChooser(WidgetWithScript, widgets.Input):
     input_type = 'hidden'
     choose_one_text = _("Choose an item")
@@ -77,6 +89,9 @@ class AdminChooser(WidgetWithScript, widgets.Input):
         # namely: value, title and edit_item_url
         if value is None:
             instance = None
+        elif self.model and isinstance(value, self.model):
+            instance = value
+            value = value.pk
         else:
             try:
                 instance = self.get_instance(value)
@@ -138,6 +153,25 @@ class AdminChooser(WidgetWithScript, widgets.Input):
             'generic_chooser/js/chooser-modal.js',
             'generic_chooser/js/chooser-widget.js',
         ]
+
+
+class AdminChooserAdapter(WidgetAdapter):
+    js_constructor = 'wagtail_generic_chooser.widgets.Chooser'
+
+    def js_args(self, widget):
+        return [
+            widget.render_html(
+                "__NAME__", widget.get_value_data(None), attrs={"id": "__ID__"}
+            ),
+        ]
+
+    class Media:
+        js = [
+            "generic_chooser/js/chooser-widget-telepath.js",
+        ]
+
+
+register(AdminChooserAdapter(), AdminChooser)
 
 
 class DRFChooser(AdminChooser):
