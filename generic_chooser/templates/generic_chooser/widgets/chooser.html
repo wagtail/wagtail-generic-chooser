@@ -6,7 +6,7 @@
     when clicked.
 {% endcomment %}
 
-<div id="{{ attrs.id }}-chooser" class="chooser {% block chooser_class %}{{ widget.classname }}{% endblock %} {% if not value %}blank{% endif %}" {% if choose_modal_url %}data-choose-modal-url="{{ choose_modal_url }}"{% endif %}>
+<div id="{{ attrs.id }}-chooser" class="chooser {% block chooser_class %}{{ widget.classname }}{% endblock %} {% if is_empty %}blank{% endif %}" {% if choose_modal_url %}data-choose-modal-url="{{ choose_modal_url }}"{% endif %}>
 
     <div class="chosen">
         {% block chosen_state_view %}

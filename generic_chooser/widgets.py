@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 
 import requests
 
+from wagtail import VERSION as WAGTAIL_VERSION
 from wagtail.utils.widgets import WidgetWithScript
 
 
@@ -67,31 +68,51 @@ class AdminChooser(WidgetWithScript, widgets.Input):
     def get_title(self, instance):
         return str(instance)
 
-    def render_html(self, name, value, attrs):
+    def get_value_data(self, value):
+        # Given a data value (which may be None or an value such as a pk to pass to get_instance),
+        # extract the necessary data for rendering the widget with that value.
+        # In the case of StreamField (in Wagtail >=2.13), this data will be serialised via
+        # telepath https://wagtail.github.io/telepath/ to be rendered client-side, which means it
+        # cannot include model instances. Instead, we return the raw values used in rendering -
+        # namely: value, title and edit_item_url
         if value is None:
             instance = None
         else:
             try:
                 instance = self.get_instance(value)
             except (ObjectDoesNotExist if self.model is None else self.model.DoesNotExist):
-                value = None
                 instance = None
 
-        original_field_html = super().render_html(name, value, attrs)
-
         if instance is None:
-            edit_item_url = None
+            return {
+                'value': None,
+                'title': '',
+                'edit_item_url': None,
+            }
         else:
-            edit_item_url = self.get_edit_item_url(instance)
+            return {
+                'value': value,
+                'title': self.get_title(instance),
+                'edit_item_url': self.get_edit_item_url(instance),
+            }
+
+    def render_html(self, name, value, attrs):
+        if WAGTAIL_VERSION >= (2, 13):
+            # From Wagtail 2.13, get_value_data is called as a preprocessing step in
+            # WidgetWithScript before invoking render_html
+            value_data = value
+        else:
+            value_data = self.get_value_data(value)
+
+        original_field_html = super().render_html(name, value_data['value'], attrs)
 
         return render_to_string(self.template, {
             'widget': self,
             'original_field_html': original_field_html,
             'attrs': attrs,
-            'value': value,
-            'item': instance,
-            'title': '' if instance is None else self.get_title(instance),
-            'edit_item_url': edit_item_url,
+            'is_empty': value_data['value'] is None,
+            'title': value_data['title'],
+            'edit_item_url': value_data['edit_item_url'],
             'choose_modal_url': self.get_choose_modal_url(),
         })
 
