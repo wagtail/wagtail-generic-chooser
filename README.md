@@ -252,3 +252,27 @@ class PageAPIChooser(DRFChooser):
 ### Chooser widgets (other data sources)
 
 See the base class implementations in `generic_chooser/widgets.py`.
+
+
+### StreamField blocks
+
+A chooser widget as defined above can be wrapped in Wagtail's `ChooserBlock` class to be used inside a StreamField. As of Wagtail 2.13, the block definition should be as follows:
+
+```python
+from wagtail.core.blocks import ChooserBlock
+
+
+class PersonChooserBlock(ChooserBlock):
+    @cached_property
+    def target_model(self):
+        from .models import People
+        return People
+
+    @cached_property
+    def widget(self):
+        from .widgets import PersonChooser
+        return PersonChooser()
+
+    def get_form_state(self, value):
+        return self.widget.get_value_data(value)
+```
