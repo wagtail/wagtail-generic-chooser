@@ -151,7 +151,7 @@ class AdminChooser(WidgetWithScript, widgets.Input):
         })
 
     def render_js_init(self, id_, name, value):
-        return "createChooserWidget({0});".format(json.dumps(id_))
+        return "new ChooserWidget({0});".format(json.dumps(id_))
 
     def __init__(self, **kwargs):
         # allow choose_one_text / choose_another_text to be overridden per-instance

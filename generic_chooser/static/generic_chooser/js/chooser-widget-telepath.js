@@ -6,7 +6,7 @@
         var html = this.html.replace(/__NAME__/g, name).replace(/__ID__/g, id);
         placeholder.outerHTML = html;
 
-        var chooser = createChooserWidget(id);
+        var chooser = new ChooserWidget(id);
         chooser.setState(initialState);
         return chooser;
     };
