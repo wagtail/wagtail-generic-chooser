@@ -228,8 +228,11 @@ class LinkedFieldMixin:
         self.linked_fields = kwargs.pop('linked_fields', {})
         super().__init__(*args, **kwargs)
 
+    def js_opts(self):
+        return {'linkedFields': self.linked_fields}
+
     def render_js_init(self, id_, name, value):
-        opts = {'linkedFields': self.linked_fields}
+        opts = self.js_opts()
         return "new LinkedFieldChooserWidget({0}, {1});".format(json.dumps(id_), json.dumps(opts))
 
     @property
@@ -238,3 +241,23 @@ class LinkedFieldMixin:
             'generic_chooser/js/chooser-widget.js',
             'generic_chooser/js/linked-field-chooser-widget.js',
         ])
+
+
+class LinkedFieldChooserAdapter(WidgetAdapter):
+    js_constructor = 'wagtail_generic_chooser.widgets.LinkedFieldChooser'
+
+    def js_args(self, widget):
+        return [
+            widget.render_html(
+                "__NAME__", widget.get_value_data(None), attrs={"id": "__ID__"}
+            ),
+            widget.js_opts(),
+        ]
+
+    class Media:
+        js = [
+            "generic_chooser/js/linked-field-chooser-widget-telepath.js",
+        ]
+
+
+register(LinkedFieldChooserAdapter(), LinkedFieldMixin)
