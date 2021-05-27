@@ -112,8 +112,8 @@ class AdminChooser(WidgetWithScript, widgets.Input):
             }
 
     def render_html(self, name, value, attrs):
-        if WAGTAIL_VERSION >= (2, 13):
-            # From Wagtail 2.13, get_value_data is called as a preprocessing step in
+        if WAGTAIL_VERSION >= (2, 12):
+            # From Wagtail 2.12, get_value_data is called as a preprocessing step in
             # WidgetWithScript before invoking render_html
             value_data = value
         else:
