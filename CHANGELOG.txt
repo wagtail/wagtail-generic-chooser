@@ -3,6 +3,7 @@
 
 * Add optional 'create item' link (Cameron Lamb)
 * Fix tabbed interface compatibility for Wagtail 2.13
+* Fix handling of empty states within StreamField blocks
 
 
 0.2.1 (2021-05-26)

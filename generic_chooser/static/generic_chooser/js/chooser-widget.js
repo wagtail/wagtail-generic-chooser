@@ -31,7 +31,7 @@ function createChooserWidget(id, opts) {
             return input.val();
         },
         setState: function(newState) {
-            if (newState) {
+            if (newState && newState.value !== null && newState.value !== '') {
                 input.val(newState.value);
                 docTitle.text(newState.title);
                 chooserElement.removeClass('blank');
