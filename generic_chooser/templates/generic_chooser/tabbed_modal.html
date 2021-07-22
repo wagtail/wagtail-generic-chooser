@@ -7,7 +7,7 @@
 {% else %}
     {% include "wagtailadmin/shared/header.html" with title=page_title icon=icon tabbed=1 merged=1 %}
 
-    <ul class="tab-nav merged">
+    <ul class="tab-nav merged" data-tab-nav>
         {% for tab in tabs %}
             <li class="{% if tab.id == active_tab %}active{% endif %}"><a href="#{{ tab.id }}">{{ tab.label }}</a></li>
         {% endfor %}
