@@ -93,3 +93,5 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'wagtail.api.v2.pagination.WagtailPagination',
     'PAGE_SIZE': 100,
 }
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
