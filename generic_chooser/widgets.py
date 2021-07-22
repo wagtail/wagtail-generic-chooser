@@ -125,6 +125,10 @@ class AdminChooser(WidgetWithScript, widgets.Input):
                 'edit_item_url': self.get_edit_item_url(instance),
             }
 
+    def render_input_html(self, name, value, attrs):
+        # render the HTML for just the (hidden) input field
+        return super().render_html(name, value, attrs)
+
     def render_html(self, name, value, attrs):
         if WAGTAIL_VERSION >= (2, 12):
             # From Wagtail 2.12, get_value_data is called as a preprocessing step in
@@ -133,7 +137,7 @@ class AdminChooser(WidgetWithScript, widgets.Input):
         else:
             value_data = self.get_value_data(value)
 
-        original_field_html = super().render_html(name, value_data['value'], attrs)
+        original_field_html = self.render_input_html(name, value_data['value'], attrs)
 
         return render_to_string(self.template, {
             'widget': self,
