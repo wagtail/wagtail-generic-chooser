@@ -2,6 +2,7 @@
 ----------------
 
 * Add optional 'create item' link (Cameron Lamb)
+* Fix tabbed interface compatibility for Wagtail 2.13
 
 
 0.2.1 (2021-05-26)
