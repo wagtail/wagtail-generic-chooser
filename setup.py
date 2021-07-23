@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='wagtail-generic-chooser',
-    version='0.2.1',
+    version='0.3',
     description="A toolkit for custom chooser popups in Wagtail",
     author='Matthew Westcott',
     author_email='matthew.westcott@torchbox.com',

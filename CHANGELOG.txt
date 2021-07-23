@@ -1,4 +1,4 @@
-0.3 (xxxx-xx-xx)
+0.3 (2021-07-23)
 ----------------
 
 * Add optional 'create item' link (Cameron Lamb)
