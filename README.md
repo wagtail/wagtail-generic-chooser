@@ -276,3 +276,81 @@ class PersonChooserBlock(ChooserBlock):
     def get_form_state(self, value):
         return self.widget.get_value_data(value)
 ```
+
+
+### Limiting choices via linked fields
+
+wagtail-generic-chooser provides a mechanism for limiting the options displayed in the chooser according to another input field on the calling page. For example, suppose the person model has a country field - we can then set up a page model with a country dropdown and a person chooser, where an editor first selects a country from the dropdown and then opens the person chooser to be presented with a list of people from that country.
+
+First, we customise the chooser view to expose a `country` URL parameter; to do this, we define a custom `chooser_mixin_class` for the viewset to use, and override its `get_unfiltered_object_list` method to filter by the `country` parameter.
+
+
+```python
+from generic_chooser.views import ModelChooserMixin, ModelChooserViewSet
+
+
+class PersonChooserMixin(ModelChooserMixin):
+    preserve_url_parameters = ['country',]  # preserve this URL parameter on pagination / search
+
+    def get_unfiltered_object_list(self):
+        objects = super().get_unfiltered_object_list()
+        country = self.request.GET.get('country')
+        if country:
+            objects = objects.filter(country_id=country)
+        return objects
+
+
+class PersonChooserViewSet(ModelChooserViewSet):
+    model = Person
+    chooser_mixin_class = PersonChooserMixin
+```
+
+
+We now set up our chooser widget to inherit from `LinkedFieldMixin`:
+
+```python
+from generic_chooser.widgets import AdminChooser, LinkedFieldMixin
+
+class PersonChooser(LinkedFieldMixin, AdminChooser):
+    icon = 'user'
+    model = People
+    page_title = _("Choose a person")
+```
+
+This mixin allows us to pass a `linked_fields` dict when constructing a `PersonChooser` instance, specifying the URL parameters to pass to the chooser along with a CSS selector to indicate which field each one should be taken from.
+
+```python
+class BlogPage(Page):
+    country = models.ForeignKey(Country, null=True, blank=True, on_delete=models.SET_NULL)
+    author = models.ForeignKey(Person, null=True, blank=True, on_delete=models.SET_NULL)
+
+    content_panels = Page.content_panels + [
+        FieldPanel('country'),
+        FieldPanel('person', widget=PersonChooser(linked_fields={
+            # pass the country selected in the id_country input to the person chooser
+            # as a URL parameter `country`
+            'country': '#id_country',
+        })),
+    ]
+```
+
+A number of other lookup mechanisms are available:
+```python
+PersonChooser(linked_fields={
+    'country': {'selector': '#id_country'}  # equivalent to 'country': '#id_country'
+})
+
+# Look up by ID
+PersonChooser(linked_fields={
+    'country': {'id': 'id_country'}
+})
+
+# Regexp match, for use in StreamFields and InlinePanels where IDs are dynamic:
+# 1) Match the ID of the current widget's (the PersonChooser) against the regexp
+#      '^id_blog_person_relationship-\d+-'
+# 2) Append 'country' to the matched substring
+# 3) Retrieve the input field with that ID
+PersonChooser(linked_fields={
+    'country': {'match': r'^id_blog_person_relationship-\d+-', 'append': 'country'},
+})
+```
