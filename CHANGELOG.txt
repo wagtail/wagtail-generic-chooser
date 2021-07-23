@@ -2,6 +2,7 @@
 ----------------
 
 * Add optional 'create item' link (Cameron Lamb)
+* Add linked field mechanism for filtering chooser options from the calling page
 * Fix tabbed interface compatibility for Wagtail 2.13
 * Fix handling of empty states within StreamField blocks
 
