@@ -2,6 +2,7 @@
 ------------------
 
 * Remove deprecated `url` imports (Tibor Leupold)
+* Add 'change' trigger to input element upon updating model within modal
 
 
 0.3 (2021-07-23)
