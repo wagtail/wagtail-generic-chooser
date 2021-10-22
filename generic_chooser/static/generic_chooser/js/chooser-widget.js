@@ -28,6 +28,7 @@ function ChooserWidget(id, opts) {
             'title': data.string,
             'edit_item_url': data.edit_link
         });
+        self.inputElement.trigger('change');
     };
 
     this.chooseButton.on('click', function() {
