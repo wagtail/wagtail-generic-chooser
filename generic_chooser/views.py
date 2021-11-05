@@ -1,7 +1,7 @@
 import requests
 import urllib
 
-from django.conf.urls import url
+import django
 from django.contrib.admin.utils import quote, unquote
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.paginator import Page, Paginator
@@ -20,6 +20,11 @@ from wagtail.admin.viewsets.base import ViewSet
 from wagtail.core.permission_policies import ModelPermissionPolicy
 from wagtail.search.backends import get_search_backend
 from wagtail.search.index import class_is_indexed
+
+if django.VERSION >= (3, 1):
+    from django.urls import re_path
+else:
+    from django.conf.urls import url as re_path
 
 
 class ModalPageFurnitureMixin(ContextMixin):
@@ -651,8 +656,8 @@ class ChooserViewSet(ViewSet):
 
     def get_urlpatterns(self):
         return super().get_urlpatterns() + [
-            url(r'^$', self.choose_view, name='choose'),
-            url(r'^(\d+)/$', self.chosen_view, name='chosen'),
+            re_path(r'^$', self.choose_view, name='choose'),
+            re_path(r'^(\d+)/$', self.chosen_view, name='chosen'),
         ]
 
 

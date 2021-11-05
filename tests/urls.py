@@ -1,10 +1,16 @@
-from django.conf.urls import include, url
+import django
+from django.conf.urls import include
 from rest_framework import routers, serializers, viewsets
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.core import urls as wagtail_urls
 
 from .api import api_router as wagtail_api_router
 from .models import Person
+
+if django.VERSION >= (3, 1):
+    from django.urls import re_path
+else:
+    from django.conf.urls import url as re_path
 
 
 class PersonSerializer(serializers.HyperlinkedModelSerializer):
@@ -23,11 +29,11 @@ router = routers.DefaultRouter()
 router.register(r'person-api', PersonViewSet)
 
 urlpatterns = [
-    url(r'^admin/', include(wagtailadmin_urls)),
-    url(r'^api/v2/', wagtail_api_router.urls),
+    re_path(r'^admin/', include(wagtailadmin_urls)),
+    re_path(r'^api/v2/', wagtail_api_router.urls),
 
     # Wire up our API using automatic URL routing.
-    url(r'^', include(router.urls)),
+    re_path(r'^', include(router.urls)),
 
-    url(r'', include(wagtail_urls)),
+    re_path(r'', include(wagtail_urls)),
 ]
