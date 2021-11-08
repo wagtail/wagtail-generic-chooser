@@ -1,16 +1,10 @@
-import django
-from django.conf.urls import include
+from django.conf.urls import include, re_path
 from rest_framework import routers, serializers, viewsets
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.core import urls as wagtail_urls
 
 from .api import api_router as wagtail_api_router
 from .models import Person
-
-if django.VERSION >= (3, 1):
-    from django.urls import re_path
-else:
-    from django.conf.urls import url as re_path
 
 
 class PersonSerializer(serializers.HyperlinkedModelSerializer):

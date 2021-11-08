@@ -1,14 +1,13 @@
 import requests
 import urllib
 
-import django
 from django.contrib.admin.utils import quote, unquote
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.paginator import Page, Paginator
 from django.forms import models as model_forms
 from django.http import Http404
 from django.shortcuts import render
-from django.urls import reverse
+from django.urls import re_path, reverse
 from django.utils.text import camel_case_to_spaces, slugify
 from django.utils.translation import gettext_lazy as _
 from django.views import View
@@ -20,11 +19,6 @@ from wagtail.admin.viewsets.base import ViewSet
 from wagtail.core.permission_policies import ModelPermissionPolicy
 from wagtail.search.backends import get_search_backend
 from wagtail.search.index import class_is_indexed
-
-if django.VERSION >= (3, 1):
-    from django.urls import re_path
-else:
-    from django.conf.urls import url as re_path
 
 
 class ModalPageFurnitureMixin(ContextMixin):
