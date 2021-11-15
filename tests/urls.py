@@ -1,4 +1,5 @@
-from django.conf.urls import include, url
+from django.conf.urls import include
+from django.urls import path
 from rest_framework import routers, serializers, viewsets
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.core import urls as wagtail_urls
@@ -23,11 +24,11 @@ router = routers.DefaultRouter()
 router.register(r'person-api', PersonViewSet)
 
 urlpatterns = [
-    url(r'^admin/', include(wagtailadmin_urls)),
-    url(r'^api/v2/', wagtail_api_router.urls),
+    path('admin/', include(wagtailadmin_urls)),
+    path('api/v2/', wagtail_api_router.urls),
 
     # Wire up our API using automatic URL routing.
-    url(r'^', include(router.urls)),
+    path('', include(router.urls)),
 
-    url(r'', include(wagtail_urls)),
+    path('', include(wagtail_urls)),
 ]

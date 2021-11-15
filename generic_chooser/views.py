@@ -1,14 +1,13 @@
 import requests
 import urllib
 
-from django.conf.urls import url
 from django.contrib.admin.utils import quote, unquote
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.paginator import Page, Paginator
 from django.forms import models as model_forms
 from django.http import Http404
 from django.shortcuts import render
-from django.urls import reverse
+from django.urls import re_path, reverse
 from django.utils.text import camel_case_to_spaces, slugify
 from django.utils.translation import gettext_lazy as _
 from django.views import View
@@ -651,8 +650,8 @@ class ChooserViewSet(ViewSet):
 
     def get_urlpatterns(self):
         return super().get_urlpatterns() + [
-            url(r'^$', self.choose_view, name='choose'),
-            url(r'^(\d+)/$', self.chosen_view, name='chosen'),
+            re_path(r'^$', self.choose_view, name='choose'),
+            re_path(r'^(\d+)/$', self.chosen_view, name='chosen'),
         ]
 
 
