@@ -1,6 +1,12 @@
-GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS = {
-    'choose': function(modal, jsonData) {
-        var paginationUrl = $('.pagination', modal.body).data('action-url');
+const GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS = {
+    choose(modal, jsonData) {
+        function serializeFormData(form) {
+            // Return the non-empty form data as an object
+            return Object.fromEntries(
+                Array.from(new FormData(form))
+                    .filter(pair => !!pair[1])
+            );
+        }
 
         function ajaxifyLinks(context) {
             $('a.item-choice', context).on('click', function() {
@@ -9,63 +15,68 @@ GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS = {
             });
 
             $('.pagination a', context).on('click', function() {
-                var page = this.getAttribute('data-page');
-                setPage(page);
+                fetchResults(this.href);
                 return false;
             });
         }
-        ajaxifyLinks(modal.body);
 
-        var searchUrl = $('form.chooser-search', modal.body).attr('action');
-        var searchRequest;
+        const searchForm = modal.body[0].querySelector('form.chooser-search');
+        const searchResults = modal.body[0].querySelector('#search-results');
+        let request;
 
-        function search() {
-            searchRequest = $.ajax({
-                url: searchUrl,
-                data: {q: $('#id_q').val(), results: 'true'},
-                success: function(data, status) {
-                    searchRequest = null;
-                    $('#search-results').html(data);
-                    ajaxifyLinks($('#search-results'));
+        function fetchResults(url, requestData) {
+            const opts = {
+                url: url,
+                success(data) {
+                    request = null;
+                    $(searchResults).html(data);
+                    ajaxifyLinks(searchResults);
                 },
-                error: function() {
-                    searchRequest = null;
+                error() {
+                    request = null;
                 }
-            });
-            return false;
+            };
+
+            // FIXME: The result view should be a distinct one
+            const params = new URLSearchParams(new URL(url).search);
+            if (!params.has('results')) {
+                requestData = $.extend(
+                    { results: 'true' },
+                    requestData
+                );
+            }
+
+            if (requestData) {
+                opts.data = requestData;
+            }
+
+            request = $.ajax(opts);
         }
 
-        $('form.chooser-search', modal.body).on('submit', search);
+        ajaxifyLinks(modal.body);
 
-        $('#id_q').on('input', function() {
-            if(searchRequest) {
-                searchRequest.abort();
-            }
-            clearTimeout($.data(this, 'timer'));
-            var wait = setTimeout(search, 50);
-            $(this).data('timer', wait);
-        });
+        if (searchForm) {
+            const searchUrl = searchForm.action;
 
-        function setPage(page) {
-            var dataObj = {p: page, results: 'true'};
-
-            if ($('#id_q').length && $('#id_q').val().length) {
-                dataObj.q = $('#id_q').val();
+            function search() {
+                fetchResults(searchUrl, serializeFormData(searchForm));
+                return false;
             }
 
-            $.ajax({
-                url: paginationUrl,
-                data: dataObj,
-                success: function(data, status) {
-                    $('#search-results').html(data);
-                    ajaxifyLinks($('#search-results'));
+            $(searchForm).on('submit', search);
+
+            $(searchForm.elements).on('input', function() {
+                if(request) {
+                    request.abort();
                 }
+                clearTimeout($.data(this, 'timer'));
+                const wait = setTimeout(search, 50);
+                $(this).data('timer', wait);
             });
-            return false;
         }
 
         $('form.create-form', modal.body).on('submit', function() {
-            var formdata = new FormData(this);
+            const formdata = new FormData(this);
 
             $.ajax({
                 url: this.action,
@@ -75,19 +86,19 @@ GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS = {
                 type: 'POST',
                 dataType: 'text',
                 success: modal.loadResponseText,
-                error: function(response, textStatus, errorThrown) {
-                    message = jsonData['error_message'] + '<br />' + errorThrown + ' - ' + response.status;
+                error(response, textStatus, errorThrown) {
+                    const message = jsonData.error_message + '<br />' + errorThrown + ' - ' + response.status;
                     $('.create-section', modal.body).append(
                         '<div class="help-block help-critical">' +
-                        '<strong>' + jsonData['error_label'] + ': </strong>' + message + '</div>');
+                        '<strong>' + jsonData.error_label + ': </strong>' + message + '</div>');
                 }
             });
 
             return false;
         });
     },
-    'chosen': function(modal, jsonData) {
-        modal.respond('chosen', jsonData['result']);
+    chosen(modal, jsonData) {
+        modal.respond('chosen', jsonData.result);
         modal.close();
     }
 };

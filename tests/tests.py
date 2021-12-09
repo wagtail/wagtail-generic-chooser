@@ -2,6 +2,8 @@ import json
 from urllib.parse import urlencode, urlparse
 from unittest.mock import patch
 
+from bs4 import BeautifulSoup
+
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
@@ -74,10 +76,10 @@ class TestChooseView(TestCase):
             '<p>Page 1 of 3.</p>',
             response_json['html']
         )
-        self.assertInHTML(
-            '<a href="#" data-page="2" class="icon icon-arrow-right-after">Next</a>',
-            response_json['html']
-        )
+
+        soup = BeautifulSoup(response_json['html'], 'html5lib')
+        next_element = soup.select_one('.pagination .next > a', text="Next")
+        self.assertEqual(next_element.attrs['href'], '/admin/site-chooser/?p=2')
 
         # fetch page 2
         response = self.client.get('/admin/site-chooser/?p=2')
@@ -89,14 +91,12 @@ class TestChooseView(TestCase):
             '<p>Page 2 of 3.</p>',
             response_json['html']
         )
-        self.assertInHTML(
-            '<a href="#" data-page="1" class="icon icon-arrow-left">Previous</a>',
-            response_json['html']
-        )
-        self.assertInHTML(
-            '<a href="#" data-page="3" class="icon icon-arrow-right-after">Next</a>',
-            response_json['html']
-        )
+
+        soup = BeautifulSoup(response_json['html'], 'html5lib')
+        prev_element = soup.select_one('.pagination .prev > a', text="Previous")
+        self.assertEqual(prev_element.attrs['href'], '/admin/site-chooser/?p=1')
+        next_element = soup.select_one('.pagination .next > a', text="Next")
+        self.assertEqual(next_element.attrs['href'], '/admin/site-chooser/?p=3')
 
     def test_search(self):
         self.assertTrue(
@@ -377,10 +377,10 @@ class TestAPIChooseView(FakeRequestsTestCase):
             '<p>Page 1 of 3.</p>',
             response_json['html']
         )
-        self.assertInHTML(
-            '<a href="#" data-page="2" class="icon icon-arrow-right-after">Next</a>',
-            response_json['html']
-        )
+
+        soup = BeautifulSoup(response_json['html'], 'html5lib')
+        next_element = soup.select_one('.pagination .next > a', text="Next")
+        self.assertEqual(next_element.attrs['href'], '/admin/api-page-chooser/?p=2')
 
         # fetch page 2
         response = self.client.get('/admin/api-page-chooser/?p=2')
@@ -392,14 +392,12 @@ class TestAPIChooseView(FakeRequestsTestCase):
             '<p>Page 2 of 3.</p>',
             response_json['html']
         )
-        self.assertInHTML(
-            '<a href="#" data-page="1" class="icon icon-arrow-left">Previous</a>',
-            response_json['html']
-        )
-        self.assertInHTML(
-            '<a href="#" data-page="3" class="icon icon-arrow-right-after">Next</a>',
-            response_json['html']
-        )
+
+        soup = BeautifulSoup(response_json['html'], 'html5lib')
+        prev_element = soup.select_one('.pagination .prev > a', text="Previous")
+        self.assertEqual(prev_element.attrs['href'], '/admin/api-page-chooser/?p=1')
+        next_element = soup.select_one('.pagination .next > a', text="Next")
+        self.assertEqual(next_element.attrs['href'], '/admin/api-page-chooser/?p=3')
 
     def test_search(self):
         homepage = Page.objects.get(depth=2)

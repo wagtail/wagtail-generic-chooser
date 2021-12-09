@@ -21,5 +21,5 @@
 </table>
 
 {% if is_paginated %}
-    {% include "generic_chooser/_ajax_pagination_nav.html" with items=page %}
+    {% include "wagtailadmin/shared/pagination_nav.html" with items=page linkurl=choose_url %}
 {% endif %}
