@@ -6,7 +6,12 @@ from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
 from wagtail import VERSION as WAGTAIL_VERSION
-from wagtail.core.models import Page, Site
+
+try:
+    from wagtail.models import Page, Site
+except ImportError:
+    # Wagtail<3.0
+    from wagtail.core.models import Page, Site
 
 from .models import Person
 

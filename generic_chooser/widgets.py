@@ -12,18 +12,17 @@ import requests
 from wagtail import VERSION as WAGTAIL_VERSION
 from wagtail.utils.widgets import WidgetWithScript
 
-
 try:
+    from wagtail.telepath import register
+except ImportError:
+    # Wagtail<3.0
     from wagtail.core.telepath import register
+    
+try:
+    from wagtail.widget_adapters import WidgetAdapter
+except ImportError:
+    # Wagtail<3.0
     from wagtail.core.widget_adapters import WidgetAdapter
-except ImportError:  # do-nothing fallback for Wagtail <2.13
-
-    def register(adapter, cls):
-        pass
-
-    class WidgetAdapter:
-        pass
-
 
 class AdminChooser(WidgetWithScript, widgets.Input):
     input_type = 'hidden'

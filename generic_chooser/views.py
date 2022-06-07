@@ -16,7 +16,13 @@ from django.views.generic.base import ContextMixin
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
 from wagtail.admin.viewsets.base import ViewSet
-from wagtail.core.permission_policies import ModelPermissionPolicy
+
+try:
+    from wagtail.permission_policies import ModelPermissionPolicy
+except ImportError:
+    # Wagtail<3.0
+    from wagtail.core.permission_policies import ModelPermissionPolicy
+
 from wagtail.search.backends import get_search_backend
 from wagtail.search.index import class_is_indexed
 
