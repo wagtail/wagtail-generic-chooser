@@ -5,8 +5,6 @@ from unittest.mock import patch
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
-from wagtail import VERSION as WAGTAIL_VERSION
-
 try:
     from wagtail.models import Page, Site
 except ImportError:
@@ -32,20 +30,14 @@ class TestChooseView(TestCase):
 
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
-        if WAGTAIL_VERSION >= (2, 10):
-            self.assertIn(
-                'Choose a site',
-                response_json['html']
-            )
-            self.assertInHTML(
-                '<use href="#icon-site"></use>',
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<h1 class="icon icon-site">Choose a site</h1>',
-                response_json['html']
-            )
+        self.assertIn(
+            'Choose a site',
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<use href="#icon-site"></use>',
+            response_json['html']
+        )
 
         self.assertInHTML(
             '<a class="item-choice" href="/admin/site-chooser/1/">localhost [default]</a>',
@@ -203,10 +195,7 @@ class TestChooseView(TestCase):
             'site-chooser-create-form-site_name': 'foo',
             'site-chooser-create-form-root_page': Page.objects.filter(depth=2).first().pk,
         })
-        if WAGTAIL_VERSION >= (2, 11):
-            self.assertRedirects(response, '/admin/')
-        else:
-            self.assertEqual(response.status_code, 403)
+        self.assertRedirects(response, '/admin/')
 
     def test_post_invalid_creation_form(self):
         self.assertTrue(
@@ -348,20 +337,14 @@ class TestAPIChooseView(FakeRequestsTestCase):
 
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
-        if WAGTAIL_VERSION >= (2, 10):
-            self.assertIn(
-                'Choose a page',
-                response_json['html']
-            )
-            self.assertInHTML(
-                '<use href="#icon-page"></use>',
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<h1 class="icon icon-page">Choose a page</h1>',
-                response_json['html']
-            )
+        self.assertIn(
+            'Choose a page',
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<use href="#icon-page"></use>',
+            response_json['html']
+        )
         self.assertInHTML(
             '<a class="item-choice" href="/admin/api-page-chooser/%d/">A red page</a>' % red_page.id,
             response_json['html']

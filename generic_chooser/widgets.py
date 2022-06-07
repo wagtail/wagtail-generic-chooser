@@ -9,7 +9,6 @@ from django.utils.translation import gettext_lazy as _
 
 import requests
 
-from wagtail import VERSION as WAGTAIL_VERSION
 from wagtail.utils.widgets import WidgetWithScript
 
 try:
@@ -69,7 +68,7 @@ class AdminChooser(WidgetWithScript, widgets.Input):
             return None
         else:
             return reverse(self.create_item_url_name)
-    
+
     def get_edit_item_url(self, instance):
         if self.edit_item_url_name is None:
             return None
@@ -129,12 +128,7 @@ class AdminChooser(WidgetWithScript, widgets.Input):
         return super().render_html(name, value, attrs)
 
     def render_html(self, name, value, attrs):
-        if WAGTAIL_VERSION >= (2, 12):
-            # From Wagtail 2.12, get_value_data is called as a preprocessing step in
-            # WidgetWithScript before invoking render_html
-            value_data = value
-        else:
-            value_data = self.get_value_data(value)
+        value_data = value
 
         original_field_html = self.render_input_html(name, value_data['value'], attrs)
 
