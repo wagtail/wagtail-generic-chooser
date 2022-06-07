@@ -1,5 +1,8 @@
-from wagtail.core import hooks
-
+try:
+    from wagtail import hooks
+except ImportError:
+    # Wagtail<3.0
+    from wagtail.core import hooks
 from tests import views
 
 

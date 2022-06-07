@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
+from wagtail import VERSION as WAGTAIL_VERSION
 
 DATABASES = {
     'default': {
@@ -67,7 +68,7 @@ INSTALLED_APPS = (
     'wagtail.images',
     'wagtail.documents',
     'wagtail.admin',
-    'wagtail.core',
+    'wagtail' if WAGTAIL_VERSION>=(3.0) else "wagtail.core",
 
     'taggit',
 
