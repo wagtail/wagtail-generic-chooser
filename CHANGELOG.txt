@@ -1,3 +1,8 @@
+----------------
+
+*  Add support for Wagtail 3.0 and drop support for all Wagtail versions
+   before 2.15
+
 0.3.1 (2021-11-16)
 ------------------
 
