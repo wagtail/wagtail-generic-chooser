@@ -1,8 +1,8 @@
 import json
-from urllib.parse import urlencode, urlparse
 from unittest.mock import patch
+from urllib.parse import urlencode, urlparse
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
 from django.test import TestCase
 
 try:

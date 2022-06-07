@@ -1,6 +1,6 @@
-import requests
 import urllib
 
+import requests
 from django.contrib.admin.utils import quote, unquote
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.paginator import Page, Paginator
@@ -12,7 +12,6 @@ from django.utils.text import camel_case_to_spaces, slugify
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic.base import ContextMixin
-
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
 from wagtail.admin.viewsets.base import ViewSet

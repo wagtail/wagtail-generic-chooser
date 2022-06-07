@@ -1,14 +1,12 @@
 import json
 
+import requests
 from django.contrib.admin.utils import quote
 from django.core.exceptions import ObjectDoesNotExist
-from django.forms import widgets, Media
+from django.forms import Media, widgets
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-
-import requests
-
 from wagtail.utils.widgets import WidgetWithScript
 
 try:

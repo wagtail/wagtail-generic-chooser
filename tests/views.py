@@ -1,10 +1,13 @@
 from django import forms
+
 try:
     from wagtail.models import Page, Site
 except ImportError:
     # Wagtail<3.0
     from wagtail.core.models import Page, Site
-from generic_chooser.views import DRFChooserMixin, DRFChooserViewSet, ModelChooserViewSet
+
+from generic_chooser.views import (DRFChooserMixin, DRFChooserViewSet,
+                                   ModelChooserViewSet)
 
 
 class SiteChooserViewSet(ModelChooserViewSet):

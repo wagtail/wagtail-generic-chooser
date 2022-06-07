@@ -2,6 +2,7 @@ from django.conf.urls import include
 from django.urls import path
 from rest_framework import routers, serializers, viewsets
 from wagtail.admin import urls as wagtailadmin_urls
+
 try:
     from wagtail import urls as wagtail_urls
 except ImportError:
