@@ -13,6 +13,8 @@ setup(
     include_package_data=True,
     install_requires=[
         'requests>=2.11.1,<3.0',
+        "wagtail>=2.15",
+        "django>=3.0,<4.0"
     ],
     license='BSD',
     long_description="""
