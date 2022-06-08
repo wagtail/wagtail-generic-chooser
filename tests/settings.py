@@ -69,7 +69,7 @@ INSTALLED_APPS = (
     'wagtail.images',
     'wagtail.documents',
     'wagtail.admin',
-    'wagtail' if WAGTAIL_VERSION>=(3.0) else "wagtail.core",
+    'wagtail' if WAGTAIL_VERSION>=(3,0) else "wagtail.core",
 
     'taggit',
 
