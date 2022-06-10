@@ -166,10 +166,17 @@ class TestChooseView(TestCase):
 
         # Admin has create permission for sites, so should get the create form
         response_json = json.loads(response.content)
-        self.assertInHTML(
-            '<a href="#site-chooser-create">Create</a>',
-            response_json['html']
-        )
+        if WAGTAIL_VERSION >= (3, 0):
+            self.assertIn(
+                'id="tab-label-site-chooser-create"',
+                response_json['html']
+            )
+        else:
+            self.assertInHTML(
+                '<a href="#site-chooser-create">Create</a>',
+                response_json['html']
+            )
+
         self.assertInHTML(
             '<input type="text" name="site-chooser-create-form-hostname" maxlength="255" required id="id_site-chooser-create-form-hostname">',
             response_json['html']
@@ -225,10 +232,17 @@ class TestChooseView(TestCase):
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
 
-        self.assertInHTML(
-            '<li class="active"><a href="#site-chooser-create">Create</a></li>',
-            response_json['html']
-        )
+        if WAGTAIL_VERSION >= (3, 0):
+            self.assertIn(
+                'id="tab-label-site-chooser-create"',
+                response_json['html']
+            )
+        else:
+            self.assertInHTML(
+                '<li class="active"><a href="#site-chooser-create">Create</a></li>',
+                response_json['html']
+            )
+
         self.assertInHTML(
             '<span>This field is required.</span>',
             response_json['html']
@@ -492,10 +506,18 @@ class TestAPICreateForm(FakeRequestsTestCase):
 
         # Create form should be displayed
         response_json = json.loads(response.content)
-        self.assertInHTML(
-            '<a href="#person-chooser-create">Create</a>',
-            response_json['html']
-        )
+
+        if WAGTAIL_VERSION >= (3, 0):
+            self.assertIn(
+                'id="tab-label-person-chooser-create"',
+                response_json['html']
+            )
+        else:
+            self.assertInHTML(
+                '<a href="#person-chooser-create">Create</a>',
+                response_json['html']
+            )
+
         self.assertInHTML(
             '<input type="text" name="person-chooser-create-form-first_name" required id="id_person-chooser-create-form-first_name">',
             response_json['html']
@@ -514,10 +536,16 @@ class TestAPICreateForm(FakeRequestsTestCase):
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
 
-        self.assertInHTML(
-            '<li class="active"><a href="#person-chooser-create">Create</a></li>',
-            response_json['html']
-        )
+        if WAGTAIL_VERSION >= (3, 0):
+            self.assertIn(
+                'id="tab-label-person-chooser-create"',
+                response_json['html']
+            )
+        else:
+            self.assertInHTML(
+                '<li class="active"><a href="#person-chooser-create">Create</a></li>',
+                response_json['html']
+            )
         self.assertInHTML(
             '<span>This field is required.</span>',
             response_json['html']
