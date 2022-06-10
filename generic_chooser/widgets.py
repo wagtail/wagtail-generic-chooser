@@ -167,10 +167,17 @@ class AdminChooser(WidgetWithScript, widgets.Input):
         super().__init__(**kwargs)
 
     class Media:
-        js = [
-            'generic_chooser/js/chooser-modal.js',
-            'generic_chooser/js/chooser-widget.js',
-        ]
+        if WAGTAIL_VERSION >= (3, 0):
+            js = [
+                'generic_chooser/js/tabs.js',
+                'generic_chooser/js/chooser-modal.js',
+                'generic_chooser/js/chooser-widget.js',
+            ]
+        else:
+            js = [
+                'generic_chooser/js/chooser-modal.js',
+                'generic_chooser/js/chooser-widget.js',
+            ]
 
 
 class AdminChooserAdapter(WidgetAdapter):
@@ -236,10 +243,17 @@ class LinkedFieldMixin:
 
     @property
     def media(self):
-        return super().media + Media(js=[
-            'generic_chooser/js/chooser-widget.js',
-            'generic_chooser/js/linked-field-chooser-widget.js',
-        ])
+        if WAGTAIL_VERSION >= (3, 0):
+            return super().media + Media(js=[
+                'generic_chooser/js/tabs.js',
+                'generic_chooser/js/chooser-widget.js',
+                'generic_chooser/js/linked-field-chooser-widget.js',
+            ])
+        else:
+            return super().media + Media(js=[
+                'generic_chooser/js/chooser-widget.js',
+                'generic_chooser/js/linked-field-chooser-widget.js',
+            ])
 
 
 class LinkedFieldChooserAdapter(WidgetAdapter):
