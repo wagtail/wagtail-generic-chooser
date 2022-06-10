@@ -15,6 +15,9 @@ GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS = {
             });
         }
         ajaxifyLinks(modal.body);
+        if ($('[data-wgc-tabs]', modal.body).length) {
+            initWagtailGenericChooserTabs();
+        }
 
         var searchUrl = $('form.chooser-search', modal.body).attr('action');
         var searchRequest;

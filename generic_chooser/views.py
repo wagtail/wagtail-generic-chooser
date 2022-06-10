@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic.base import ContextMixin
 
+from wagtail import VERSION as WAGTAIL_VERSION
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
 from wagtail.admin.viewsets.base import ViewSet
@@ -471,7 +472,10 @@ class BaseChooseView(ModalPageFurnitureMixin, ContextMixin, View):
     icon = 'snippet'
     page_title = _("Choose")
 
-    template = 'generic_chooser/tabbed_modal.html'
+    if WAGTAIL_VERSION >= (3, 0):
+        template = 'generic_chooser/tabbed_modal_v3.html'
+    else:
+        template = 'generic_chooser/tabbed_modal.html'
 
     def get_template(self):
         return self.template

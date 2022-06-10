@@ -1,0 +1,22 @@
+{% if tabs|length == 1 %}
+    {% include "wagtailadmin/shared/header.html" with title=page_title icon=header_icon tabbed=0 merged=0 %}
+
+    <div class="{% if tab.classname %}{{ tab.classname }} {% endif %}nice-padding">
+        {% include tabs.0.template %}
+    </div>
+{% else %}
+    {% include "wagtailadmin/shared/header.html" with title=page_title icon=header_icon tabbed=1 merged=1 %}
+
+    <div class="w-tabs" data-tabs data-wgc-tabs data-tabs-animate>
+        <div role="tablist" class="w-tabs__list">
+            {% for tab in tabs %}
+                {% include 'wagtailadmin/shared/tabs/tab_nav_link.html' with tab_id=tab.id title=tab.label %}
+            {% endfor %}
+        </div>
+        {% for tab in tabs %}
+            <section id="tab-{{ tab.id }}" class="w-tabs__panel nice-padding" role="tabpanel" aria-labelledby="tab-label-{{ tab.id }}">
+                {% include tab.template %}
+            </section>
+        {% endfor %}
+    </div>
+{% endif %}
