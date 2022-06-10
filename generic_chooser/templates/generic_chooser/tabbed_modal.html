@@ -1,11 +1,11 @@
 {% if tabs|length == 1 %}
-    {% include "wagtailadmin/shared/header.html" with title=page_title icon=icon tabbed=0 merged=0 %}
+    {% include "wagtailadmin/shared/header.html" with title=page_title icon=header_icon tabbed=0 merged=0 %}
 
     <div class="{% if tab.classname %}{{ tab.classname }} {% endif %}nice-padding">
         {% include tabs.0.template %}
     </div>
 {% else %}
-    {% include "wagtailadmin/shared/header.html" with title=page_title icon=icon tabbed=1 merged=1 %}
+    {% include "wagtailadmin/shared/header.html" with title=page_title icon=header_icon tabbed=1 merged=1 %}
 
     <ul class="tab-nav merged" data-tab-nav>
         {% for tab in tabs %}
