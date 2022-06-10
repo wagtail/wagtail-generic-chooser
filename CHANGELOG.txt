@@ -1,3 +1,9 @@
+0.4 (2022-06-10)
+----------------
+
+* Wagtail 3.0 support (Brian Xu, Matt Westcott, Dan Braghis)
+
+
 0.3.1 (2021-11-16)
 ------------------
 
