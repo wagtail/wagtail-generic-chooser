@@ -2,6 +2,7 @@ import json
 from urllib.parse import urlencode, urlparse
 from unittest.mock import patch
 
+from django import forms
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
@@ -14,6 +15,7 @@ except ImportError:
     from wagtail.core.models import Page, Site
 
 from .models import Person
+from .widgets import SiteChooser
 
 
 class TestChooseView(TestCase):
@@ -569,3 +571,14 @@ class TestAPICreateForm(FakeRequestsTestCase):
             response_json['result'],
             {"id": str(person.id), "string": "Gordon Ramsay", "edit_link": None}
         )
+
+
+class TestChooserWidget(TestCase):
+    def test_render(self):
+        class SiteForm(forms.Form):
+            site = forms.ModelChoiceField(queryset=Site.objects.all(), widget=SiteChooser())
+
+        localhost = Site.objects.get(hostname='localhost')
+        form = SiteForm(initial={'site': localhost})
+        html = form.as_p()
+        self.assertIn('<span class="title">localhost [default]</span>', html)
