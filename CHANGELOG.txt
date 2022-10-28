@@ -1,3 +1,9 @@
+Unreleased
+----------------
+
+* Wagtail 4.0 support (Katherine Domingo)
+
+
 0.4.1 (2022-07-07)
 ------------------
 
