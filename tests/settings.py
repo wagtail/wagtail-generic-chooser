@@ -97,7 +97,8 @@ REST_FRAMEWORK = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-
-# This should be the base URL used to access the Wagtail admin site.
-# Without this, URLs in notification emails will not display correctly.
-WAGTAILADMIN_BASE_URL = "http://example.com"
+# Suppresses warning for versions of Wagtail above 3.0
+if WAGTAIL_VERSION >= (3, 0):
+    # This should be the base URL used to access the Wagtail admin site.
+    # Without this, URLs in notification emails will not display correctly.
+    WAGTAILADMIN_BASE_URL = "http://example.com"
