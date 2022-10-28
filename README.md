@@ -8,7 +8,7 @@ It is intended that `wagtail-generic-chooser` will be expanded to cover all the 
 
 ## Requirements
 
-Wagtail 2.4 or higher
+Wagtail 2.15 or higher
 
 ## Installation
 

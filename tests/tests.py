@@ -245,10 +245,20 @@ class TestChooseView(TestCase):
                 response_json['html']
             )
 
-        self.assertInHTML(
-            '<span>This field is required.</span>',
-            response_json['html']
-        )
+        if WAGTAIL_VERSION >= (4, 0):
+            self.assertInHTML(
+                (
+                    '<p class="error-message">'
+                    'This field is required.'
+                    '</p>'
+                ),
+                response_json['html']
+            )
+        else:
+            self.assertInHTML(
+                '<span>This field is required.</span>',
+                response_json['html']
+            )
 
     def test_post_valid_creation_form(self):
         self.assertTrue(
@@ -548,10 +558,21 @@ class TestAPICreateForm(FakeRequestsTestCase):
                 '<li class="active"><a href="#person-chooser-create">Create</a></li>',
                 response_json['html']
             )
-        self.assertInHTML(
-            '<span>This field is required.</span>',
-            response_json['html']
-        )
+
+        if WAGTAIL_VERSION >= (4, 0):
+            self.assertInHTML(
+                (
+                    '<p class="error-message">'
+                    'This field is required.'
+                    '</p>'
+                ),
+                response_json['html']
+            )
+        else:
+            self.assertInHTML(
+                '<span>This field is required.</span>',
+                response_json['html']
+            )
 
     def test_post_valid(self):
         response = self.client.post('/admin/person-chooser/', {
