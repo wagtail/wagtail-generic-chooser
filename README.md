@@ -24,7 +24,7 @@ Then add `generic_chooser` to your project's `INSTALLED_APPS`.
 
 The `generic_chooser.views` module provides a viewset class `ModelChooserViewSet`, which can be used to build a modal interface for choosing a Django model instance. Viewsets are Wagtail's way of grouping several related views into a single unit along with their URL configuration; this makes it possible to configure the overall behaviour of a workflow within Wagtail without having to know how that workflow breaks down into individual views.
 
-At minimum, a chooser can be implemented by subclassing `ModelChooserViewSet` and setting a `model` attribute. Other attributes can be specified to customise the look and feel of the chooser, such as the heading icon and number of items per page. For example, to implement a chooser for [bakerydemo](https://github.com/wagtail/bakerydemo)'s `People` model:
+At minimum, a chooser can be implemented by subclassing `ModelChooserViewSet` and setting a `model` attribute. Other attributes can be specified to customise the look and feel of the chooser, such as the heading icon and number of items per page. For example, to implement a chooser for [bakerydemo](https://github.com/wagtail/bakerydemo)'s `Person` model:
 
 ```python
 # myapp/views.py
@@ -33,12 +33,12 @@ from django.utils.translation import gettext_lazy as _
 
 from generic_chooser.views import ModelChooserViewSet
 
-from bakerydemo.base.models import People
+from bakerydemo.base.models import Person
 
 
 class PersonChooserViewSet(ModelChooserViewSet):
     icon = 'user'
-    model = People
+    model = Person
     page_title = _("Choose a person")
     per_page = 10
     order_by = 'first_name'
@@ -108,7 +108,10 @@ from generic_chooser.views import DRFChooserMixin, DRFChooserViewSet
 
 class PersonChooserMixin(DRFChooserMixin):
     def get_edit_item_url(self, item):
-        return reverse('wagtailsnippets:edit', args=('base', 'people', quote(item['id'])))
+        # for Wagtail 4.x
+        return reverse('wagtailsnippets_base_person:edit', args=(quote(item['id']), ))
+        # for Wagtail <= 3.x
+        # return reverse('wagtailsnippets:edit', args=('base', 'person', quote(item['id'])))
 
     def get_object_string(self, item):
         return "%s %s" % (item['first_name'], item['last_name'])
@@ -122,7 +125,7 @@ class PersonForm(forms.Form):
 
 class PersonChooserViewSet(DRFChooserViewSet):
     icon = 'user'
-    api_base_url = 'http://localhost:8000/people-api/'
+    api_base_url = 'http://localhost:8000/person-api/'
     page_title = _("Choose a person")
     per_page = 10
     form_class = PersonForm
@@ -171,17 +174,20 @@ from django.utils.translation import gettext_lazy as _
 
 from generic_chooser.views import ModelChooserMixin, ModelChooserViewSet
 
-from bakerydemo.base.models import People
+from bakerydemo.base.models import Person
 
 
 class PersonChooserMixin(ModelChooserMixin):
     def get_edit_item_url(self, item):
-        return reverse('wagtailsnippets:edit', args=('base', 'people', quote(item.pk)))
+        # for Wagtail 4.x
+        return reverse('wagtailsnippets_base_person:edit', args=(quote(item.pk), ))
+        # for Wagtail <= 3.x
+        # return reverse('wagtailsnippets:edit', args=('base', 'person', quote(item.pk)))
 
 
 class PersonChooserViewSet(ModelChooserViewSet):
     icon = 'user'
-    model = People
+    model = Person
     page_title = _("Choose a person")
     per_page = 10
     order_by = 'first_name'
@@ -191,7 +197,7 @@ class PersonChooserViewSet(ModelChooserViewSet):
 
 ### Chooser widgets (model-based)
 
-The `generic_chooser.widgets` module provides an `AdminChooser` widget to be subclassed. For example, a widget for the `People` model, using the chooser views defined above, can be implemented as follows:
+The `generic_chooser.widgets` module provides an `AdminChooser` widget to be subclassed. For example, a widget for the `Person` model, using the chooser views defined above, can be implemented as follows:
 
 ```python
 from django.contrib.admin.utils import quote
@@ -200,18 +206,21 @@ from django.utils.translation import gettext_lazy as _
 
 from generic_chooser.widgets import AdminChooser
 
-from bakerydemo.base.models import People
+from bakerydemo.base.models import Person
 
 
 class PersonChooser(AdminChooser):
     choose_one_text = _('Choose a person')
     choose_another_text = _('Choose another person')
     link_to_chosen_text = _('Edit this person')
-    model = People
+    model = Person
     choose_modal_url_name = 'person_chooser:choose'
 
     def get_edit_item_url(self, item):
-        return reverse('wagtailsnippets:edit', args=('base', 'people', quote(item.pk)))
+        # for Wagtail 4.x
+        return reverse('wagtailsnippets_base_person:edit', args=(quote(item.pk), ))
+        # for Wagtail <= 3.x
+        # return reverse('wagtailsnippets:edit', args=('base', 'person', quote(item.pk)))
 ```
 
 This widget can now be used in a form:
@@ -221,7 +230,7 @@ from myapp.widgets import PersonChooser
 
 class BlogPage(Page):
     author = models.ForeignKey(
-        'base.People', related_name='blog_posts',
+        'base.Person', related_name='blog_posts',
         null=True, blank=True, on_delete=models.SET_NULL
     )
 
@@ -265,8 +274,8 @@ from wagtail.core.blocks import ChooserBlock
 class PersonChooserBlock(ChooserBlock):
     @cached_property
     def target_model(self):
-        from .models import People
-        return People
+        from .models import Person
+        return Person
 
     @cached_property
     def widget(self):
@@ -313,7 +322,7 @@ from generic_chooser.widgets import AdminChooser, LinkedFieldMixin
 
 class PersonChooser(LinkedFieldMixin, AdminChooser):
     icon = 'user'
-    model = People
+    model = Person
     page_title = _("Choose a person")
 ```
 
