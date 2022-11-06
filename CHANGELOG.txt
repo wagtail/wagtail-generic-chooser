@@ -2,7 +2,7 @@ Unreleased
 ----------------
 
 * Wagtail 4.0 support (Katherine Domingo)
-
+* Prevent duplicate create calls against slow APIs
 
 0.4.1 (2022-07-07)
 ------------------

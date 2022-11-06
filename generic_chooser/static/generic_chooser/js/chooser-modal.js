@@ -68,6 +68,9 @@ GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS = {
         }
 
         $('form.create-form', modal.body).on('submit', function() {
+            const button = $(this).find('[type="submit"]');
+            button.prop("disabled", true);
+
             var formdata = new FormData(this);
 
             $.ajax({
