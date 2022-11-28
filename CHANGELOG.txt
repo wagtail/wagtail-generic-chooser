@@ -1,7 +1,7 @@
-Unreleased
-----------------
+0.4.2 (2022-11-28)
+------------------
 
-* Wagtail 4.0 support (Katherine Domingo)
+* Wagtail 4.0 support (Katherine Domingo, Matt Westcott)
 * Prevent duplicate create calls against slow APIs (Haydn Greatnews)
 
 
