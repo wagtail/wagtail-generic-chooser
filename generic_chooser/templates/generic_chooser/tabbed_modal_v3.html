@@ -16,7 +16,7 @@
             </div>
         </div>
         {% for tab in tabs %}
-            <section id="tab-{{ tab.id }}" class="w-tabs__panel nice-padding" role="tabpanel" aria-labelledby="tab-label-{{ tab.id }}">
+            <section id="tab-{{ tab.id }}" class="w-tabs__panel nice-padding" role="tabpanel" aria-labelledby="tab-label-{{ tab.id }}" hidden>
                 {% include tab.template %}
             </section>
         {% endfor %}
