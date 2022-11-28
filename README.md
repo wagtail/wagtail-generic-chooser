@@ -215,6 +215,7 @@ class PersonChooser(AdminChooser):
     link_to_chosen_text = _('Edit this person')
     model = Person
     choose_modal_url_name = 'person_chooser:choose'
+    icon = 'user'
 
     def get_edit_item_url(self, item):
         # for Wagtail 4.x
