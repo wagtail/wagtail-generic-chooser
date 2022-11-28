@@ -20,7 +20,30 @@ jobs:
           command: ./runtests.py
           name: Test
 
+  nightly-wagtail-test:
+    executor: python/default
+    steps:
+      - checkout
+      - run: git clone git@github.com:wagtail/wagtail.git
+      - run: pip install -e .
+      - run: pip install ./wagtail
+      - run: ./runtests.py
+      - run:
+          when: on_fail
+          command: python ./.circleci/report_nightly_build_failure.py
+
 workflows:
-  main:
+  version: 2
+  test:
     jobs:
       - build-and-test
+  nightly:
+    jobs:
+      - nightly-wagtail-test
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - main
