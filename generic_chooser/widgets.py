@@ -41,6 +41,7 @@ class AdminChooser(WidgetWithScript, widgets.Input):
     link_to_create_text = _("Create an item")
     show_edit_link = True
     show_create_link = True
+    icon = "snippet"
 
     classname = None  # CSS class for the top-level element
 
@@ -63,7 +64,10 @@ class AdminChooser(WidgetWithScript, widgets.Input):
     # chooser widget.
     choose_modal_url_name = None
 
-    template = "generic_chooser/widgets/chooser.html"
+    if WAGTAIL_VERSION >= (4, 0):
+        template = "generic_chooser/widgets/chooser_v4.html"
+    else:
+        template = "generic_chooser/widgets/chooser.html"
 
     # when looping over form fields, this one should appear in visible_fields, not hidden_fields
     # despite the underlying input being type="hidden"
