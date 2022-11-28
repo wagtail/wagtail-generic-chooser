@@ -602,4 +602,7 @@ class TestChooserWidget(TestCase):
         localhost = Site.objects.get(hostname='localhost')
         form = SiteForm(initial={'site': localhost})
         html = form.as_p()
-        self.assertIn('<span class="title">localhost [default]</span>', html)
+        if WAGTAIL_VERSION >= (4, 0):
+            self.assertIn('<div class="chooser__title">localhost [default]</div>', html)
+        else:
+            self.assertIn('<span class="title">localhost [default]</span>', html)
