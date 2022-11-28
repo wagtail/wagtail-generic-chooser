@@ -606,3 +606,8 @@ class TestChooserWidget(TestCase):
             self.assertIn('<div class="chooser__title">localhost [default]</div>', html)
         else:
             self.assertIn('<span class="title">localhost [default]</span>', html)
+
+
+class TestTestFailure(TestCase):
+    def test_foo(self):
+        self.assertEqual(1, 2, "bogus test failure to make sure nightly builds are working")
