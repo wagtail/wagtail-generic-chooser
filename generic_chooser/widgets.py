@@ -69,6 +69,8 @@ class AdminChooser(WidgetWithScript, widgets.Input):
     else:
         template = "generic_chooser/widgets/chooser.html"
 
+    js_constructor_name = "ChooserWidget"
+
     # when looping over form fields, this one should appear in visible_fields, not hidden_fields
     # despite the underlying input being type="hidden"
     is_hidden = False
@@ -161,8 +163,19 @@ class AdminChooser(WidgetWithScript, widgets.Input):
             'choose_modal_url': self.get_choose_modal_url(),
         })
 
+    def js_opts(self):
+        return {}
+
     def render_js_init(self, id_, name, value):
-        return "new ChooserWidget({0});".format(json.dumps(id_))
+        opts = self.js_opts()
+        if opts:
+            return "new {constructor}({id}, {opts});".format(
+                constructor=self.js_constructor_name, id=json.dumps(id_), opts=json.dumps(opts)
+            )
+        else:
+            return "new {constructor}({id});".format(
+                constructor=self.js_constructor_name, id=json.dumps(id_)
+            )
 
     def __init__(self, **kwargs):
         # allow choose_one_text / choose_another_text to be overridden per-instance
@@ -200,13 +213,23 @@ class AdminChooserAdapter(WidgetAdapter):
             widget.render_html(
                 "__NAME__", widget.get_value_data(None), attrs={"id": "__ID__"}
             ),
+            widget.js_opts(),
         ]
 
     class Media:
-        js = [
-            "generic_chooser/js/chooser-widget.js",
-            "generic_chooser/js/chooser-widget-telepath.js",
-        ]
+        if WAGTAIL_VERSION >= (3, 0):
+            js = [
+                'generic_chooser/js/tabs.js',
+                'generic_chooser/js/chooser-modal.js',
+                "generic_chooser/js/chooser-widget.js",
+                "generic_chooser/js/chooser-widget-telepath.js",
+            ]
+        else:
+            js = [
+                'generic_chooser/js/chooser-modal.js',
+                "generic_chooser/js/chooser-widget.js",
+                "generic_chooser/js/chooser-widget-telepath.js",
+            ]
 
 
 register(AdminChooserAdapter(), AdminChooser)
@@ -243,16 +266,16 @@ class LinkedFieldMixin:
     will retrieve the value of the form input matching the selector '#id_country'
     and pass that to the chooser modal as the URL parameter 'country'.
     """
+    js_constructor_name = "LinkedFieldChooserWidget"
+
     def __init__(self, *args, **kwargs):
         self.linked_fields = kwargs.pop('linked_fields', {})
         super().__init__(*args, **kwargs)
 
     def js_opts(self):
-        return {'linkedFields': self.linked_fields}
-
-    def render_js_init(self, id_, name, value):
-        opts = self.js_opts()
-        return "new LinkedFieldChooserWidget({0}, {1});".format(json.dumps(id_), json.dumps(opts))
+        opts = super().js_opts()
+        opts.update({'linkedFields': self.linked_fields})
+        return opts
 
     @property
     def media(self):
@@ -269,22 +292,23 @@ class LinkedFieldMixin:
             ])
 
 
-class LinkedFieldChooserAdapter(WidgetAdapter):
+class LinkedFieldChooserAdapter(AdminChooserAdapter):
     js_constructor = 'wagtail_generic_chooser.widgets.LinkedFieldChooser'
 
-    def js_args(self, widget):
-        return [
-            widget.render_html(
-                "__NAME__", widget.get_value_data(None), attrs={"id": "__ID__"}
-            ),
-            widget.js_opts(),
-        ]
-
     class Media:
-        js = [
-            "generic_chooser/js/linked-field-chooser-widget.js",
-            "generic_chooser/js/linked-field-chooser-widget-telepath.js",
-        ]
+        if WAGTAIL_VERSION >= (3, 0):
+            js = [
+                'generic_chooser/js/tabs.js',
+                'generic_chooser/js/chooser-widget.js',
+                "generic_chooser/js/linked-field-chooser-widget.js",
+                "generic_chooser/js/linked-field-chooser-widget-telepath.js",
+            ]
+        else:
+            js = [
+                'generic_chooser/js/chooser-widget.js',
+                "generic_chooser/js/linked-field-chooser-widget.js",
+                "generic_chooser/js/linked-field-chooser-widget-telepath.js",
+            ]
 
 
 register(LinkedFieldChooserAdapter(), LinkedFieldMixin)

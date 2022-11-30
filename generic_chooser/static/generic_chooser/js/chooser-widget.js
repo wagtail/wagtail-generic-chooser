@@ -86,14 +86,15 @@ ChooserWidget.prototype.focus = function() {
 }
 
 
-function ChooserWidgetFactory(html) {
+function ChooserWidgetFactory(html, opts) {
     this.html = html;
+    this.opts = opts;
 }
 ChooserWidgetFactory.prototype.render = function(placeholder, name, id, initialState) {
     var html = this.html.replace(/__NAME__/g, name).replace(/__ID__/g, id);
     placeholder.outerHTML = html;
 
-    var chooser = new ChooserWidget(id);
+    var chooser = new ChooserWidget(id, this.opts);
     chooser.setState(initialState);
     return chooser;
 };
