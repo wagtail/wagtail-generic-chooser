@@ -89,12 +89,13 @@ ChooserWidget.prototype.focus = function() {
 function ChooserWidgetFactory(html, opts) {
     this.html = html;
     this.opts = opts;
+    this.widgetClass = ChooserWidget;
 }
 ChooserWidgetFactory.prototype.render = function(placeholder, name, id, initialState) {
     var html = this.html.replace(/__NAME__/g, name).replace(/__ID__/g, id);
     placeholder.outerHTML = html;
 
-    var chooser = new ChooserWidget(id, this.opts);
+    var chooser = new this.widgetClass(id, this.opts);
     chooser.setState(initialState);
     return chooser;
 };
