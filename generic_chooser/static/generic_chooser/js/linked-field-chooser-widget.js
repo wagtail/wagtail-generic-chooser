@@ -56,3 +56,19 @@ LinkedFieldChooserWidget.prototype.getModalURL = function() {
     }
     return url;
 }
+
+
+function LinkedFieldChooserWidgetFactory(html, opts) {
+    this.html = html;
+    this.opts = opts;
+}
+LinkedFieldChooserWidgetFactory.prototype.render = function(placeholder, name, id, initialState) {
+    var html = this.html.replace(/__NAME__/g, name).replace(/__ID__/g, id);
+    placeholder.outerHTML = html;
+
+    var chooser = new LinkedFieldChooserWidget(id, this.opts);
+    chooser.setState(initialState);
+    return chooser;
+};
+
+window.LinkedFieldChooserWidgetFactory = LinkedFieldChooserWidgetFactory;
