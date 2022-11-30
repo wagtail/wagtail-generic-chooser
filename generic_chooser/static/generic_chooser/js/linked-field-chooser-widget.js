@@ -61,14 +61,8 @@ LinkedFieldChooserWidget.prototype.getModalURL = function() {
 function LinkedFieldChooserWidgetFactory(html, opts) {
     this.html = html;
     this.opts = opts;
+    this.widgetClass = LinkedFieldChooserWidget;
 }
-LinkedFieldChooserWidgetFactory.prototype.render = function(placeholder, name, id, initialState) {
-    var html = this.html.replace(/__NAME__/g, name).replace(/__ID__/g, id);
-    placeholder.outerHTML = html;
-
-    var chooser = new LinkedFieldChooserWidget(id, this.opts);
-    chooser.setState(initialState);
-    return chooser;
-};
+LinkedFieldChooserWidgetFactory.prototype = Object.create(ChooserWidgetFactory.prototype);
 
 window.LinkedFieldChooserWidgetFactory = LinkedFieldChooserWidgetFactory;
