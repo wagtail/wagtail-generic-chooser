@@ -11,7 +11,7 @@ function ChooserWidget(id, opts) {
 
     this.id = id;
     this.chooserElement = $('#' + id + '-chooser');
-    this.titleElement = this.chooserElement.find('.title');
+    this.titleElement = this.chooserElement.find('[data-chooser-title]');
     this.inputElement = $('#' + id);
     this.editLinkElement = this.chooserElement.find('.edit-link');
     this.editLinkWrapper = this.chooserElement.find('.edit-link-wrapper');
