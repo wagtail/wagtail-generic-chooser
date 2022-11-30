@@ -204,6 +204,7 @@ class AdminChooserAdapter(WidgetAdapter):
 
     class Media:
         js = [
+            "generic_chooser/js/chooser-widget.js",
             "generic_chooser/js/chooser-widget-telepath.js",
         ]
 
@@ -281,6 +282,7 @@ class LinkedFieldChooserAdapter(WidgetAdapter):
 
     class Media:
         js = [
+            "generic_chooser/js/linked-field-chooser-widget.js",
             "generic_chooser/js/linked-field-chooser-widget-telepath.js",
         ]
 

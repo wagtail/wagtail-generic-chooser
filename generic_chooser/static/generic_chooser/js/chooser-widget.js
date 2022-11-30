@@ -84,3 +84,17 @@ ChooserWidget.prototype.getValue = function() {
 ChooserWidget.prototype.focus = function() {
     this.chooseButton.focus();
 }
+
+
+function ChooserWidgetFactory(html) {
+    this.html = html;
+}
+ChooserWidgetFactory.prototype.render = function(placeholder, name, id, initialState) {
+    var html = this.html.replace(/__NAME__/g, name).replace(/__ID__/g, id);
+    placeholder.outerHTML = html;
+
+    var chooser = new ChooserWidget(id);
+    chooser.setState(initialState);
+    return chooser;
+};
+window.WagtailGenericChooserWidgetFactory = ChooserWidgetFactory;
