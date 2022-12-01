@@ -91,6 +91,8 @@ GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS = {
 
             return false;
         });
+
+        modal.ajaxifyForm('form[data-multiple-choice-form]');
     },
     'chosen': function(modal, jsonData) {
         modal.respond('chosen', jsonData['result']);

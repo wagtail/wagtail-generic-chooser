@@ -1,17 +1,25 @@
 {% load i18n %}
 
 <table class="listing">
-    <col />
-    <col />
-    <col width="16%" />
+    {% if is_multiple_choice %}
+        <col width="1%">
+    {% endif %}
     <thead>
         <tr class="table-headers">
+            {% if is_multiple_choice %}
+                <th>{% trans "Select" %}</th>
+            {% endif %}
             <th>{% trans "Title" %}</th>
         </tr>
     </thead>
     <tbody>
         {% for row in rows %}
             <tr>
+                {% if is_multiple_choice %}
+                    <td>
+                        <input type="checkbox" name="id" value="{{ row.object_id }}" title="{% blocktrans trimmed with title=row.title %}Select {{ title }}{% endblocktrans %}">
+                    </td>
+                {% endif %}
                 <td class="title">
                     <h2><a class="item-choice" href="{{ row.choose_url }}">{{ row.title }}</a></h2>
                 </td>
