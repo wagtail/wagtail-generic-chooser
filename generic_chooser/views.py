@@ -80,15 +80,18 @@ class ChooserMixin:
     # This will be used as the action URL of the search form.
     choose_url_name = None
 
-    def get_choose_url(self):
-        url = reverse(self.choose_url_name)
-
+    def get_choose_url_parameters(self):
         params = {}
-        for param in self.preserve_url_parameters:
+        for param in (self.preserve_url_parameters + ['multiple']):
             try:
                 params[param] = self.request.GET[param]
             except KeyError:
                 pass
+        return params
+
+    def get_choose_url(self):
+        url = reverse(self.choose_url_name)
+        params = self.get_choose_url_parameters()
 
         if params:
             param_string = urllib.parse.urlencode(params)
@@ -104,9 +107,35 @@ class ChooserMixin:
     # can override get_chosen_url instead.
     chosen_url_name = None
 
+    def get_chosen_url_parameters(self):
+        params = {}
+        try:
+            params['multiple'] = self.request.GET['multiple']
+        except KeyError:
+            pass
+
+        return params
+
     def get_chosen_url(self, instance):
         object_id = self.get_object_id(instance)
-        return reverse(self.chosen_url_name, args=(quote(object_id),))
+        url = reverse(self.chosen_url_name, args=(quote(object_id),))
+        params = self.get_chosen_url_parameters()
+
+        if params:
+            param_string = urllib.parse.urlencode(params)
+            if '?' in url:
+                url += '&' + param_string
+            else:
+                url += '?' + param_string
+
+        return url
+
+    # URL route name for the 'multiple items chosen' view
+    chosen_multiple_url_name = None
+
+    def get_chosen_multiple_url(self):
+        if self.chosen_multiple_url_name:
+            return reverse(self.chosen_multiple_url_name)
 
     # URL route name for editing an existing item (optional) - should return the URL of the item's
     # edit view when reversed with the item's quoted ID as its only argument. If no suitable URL
@@ -182,17 +211,33 @@ class ChooserMixin:
             'edit_link': self.get_edit_item_url(item)
         }
 
-    def get_chosen_response(self, item):
+    def _wrap_chosen_response_data(self, response_data):
         """
-        Return the HTTP response to indicate that an object has been chosen
+        Wrap a response_data JSON payload in a modal workflow response
         """
-        response_data = self.get_chosen_response_data(item)
-
         return render_modal_workflow(
             self.request,
             None, None,
             None, json_data={'step': 'chosen', 'result': response_data}
         )
+
+    def get_multiple_chosen_response(self, items):
+        response_data = [
+            self.get_chosen_response_data(item) for item in items
+        ]
+        return self._wrap_chosen_response_data(response_data)
+
+    def get_chosen_response(self, item):
+        """
+        Return the HTTP response to indicate that an object has been chosen
+        """
+        response_data = self.get_chosen_response_data(item)
+        if self.request.GET.get('multiple'):
+            # a multiple result was requested but we're only returning one,
+            # so wrap as a list
+            response_data = [response_data]
+
+        return self._wrap_chosen_response_data(response_data)
 
 
 class ModelChooserMixin(ChooserMixin):
@@ -327,6 +372,7 @@ class ChooserListingTabMixin:
 
     def get_row_data(self, item):
         return {
+            'object_id': self.get_object_id(item),
             'choose_url': self.get_chosen_url(item),
             'title': self.get_object_string(item),
         }
@@ -358,7 +404,9 @@ class ChooserListingTabMixin:
             'results_template': self.get_results_template(),
             'is_searchable': self.is_searchable,
             'choose_url': self.get_choose_url(),
+            'chosen_multiple_url': self.get_chosen_multiple_url(),
             'is_paginated': self.is_paginated,
+            'is_multiple_choice': bool(self.request.GET.get('multiple')),
         }
 
         if self.is_searchable:
@@ -591,6 +639,18 @@ class BaseChosenView(View):
         return self.get_chosen_response(item)
 
 
+class BaseChosenMultipleView(View):
+    def get(self, request):
+        items = []
+        for pk in request.GET.getlist('id'):
+            try:
+                items.append(self.get_object(pk))
+            except ObjectDoesNotExist:
+                pass
+
+        return self.get_multiple_chosen_response(items)
+
+
 class ModelChosenView(ModelChooserMixin, BaseChosenView):
     pass
 
@@ -602,6 +662,7 @@ class DRFChosenView(DRFChooserMixin, BaseChosenView):
 class ChooserViewSet(ViewSet):
     base_choose_view_class = BaseChooseView
     base_chosen_view_class = BaseChosenView
+    base_chosen_multiple_view_class = BaseChosenMultipleView
     chooser_mixin_class = ChooserMixin
     listing_tab_mixin_class = ChooserListingTabMixin
     create_tab_mixin_class = ChooserCreateTabMixin
@@ -626,10 +687,18 @@ class ChooserViewSet(ViewSet):
             {}
         )
 
+        # compose a final ChosenMultipleView subclass from base_chosen_multiple_view_class and chooser_mixin_class
+        self.chosen_multiple_view_class = type(
+            'ChooserViewSetChosenMultipleView',
+            (self.chooser_mixin_class, self.base_chosen_multiple_view_class),
+            {}
+        )
+
     def get_choose_view_attrs(self):
         attrs = {
             'choose_url_name': self.get_url_name('choose'),
             'chosen_url_name': self.get_url_name('chosen'),
+            'chosen_multiple_url_name': self.get_url_name('chosen_multiple'),
         }
 
         for attr_name in (
@@ -658,10 +727,24 @@ class ChooserViewSet(ViewSet):
     def chosen_view(self):
         return self.chosen_view_class.as_view(**self.get_chosen_view_attrs())
 
+    def get_chosen_multiple_view_attrs(self):
+        attrs = {}
+
+        for attr_name in ('edit_item_url_name', 'prefix',):
+            if hasattr(self, attr_name):
+                attrs[attr_name] = getattr(self, attr_name)
+
+        return attrs
+
+    @property
+    def chosen_multiple_view(self):
+        return self.chosen_multiple_view_class.as_view(**self.get_chosen_multiple_view_attrs())
+
     def get_urlpatterns(self):
         return super().get_urlpatterns() + [
             re_path(r'^$', self.choose_view, name='choose'),
             re_path(r'^(\d+)/$', self.chosen_view, name='chosen'),
+            re_path(r'^chosen-multiple/$', self.chosen_multiple_view, name='chosen_multiple'),
         ]
 
 
@@ -684,6 +767,13 @@ class ModelChooserViewSet(ChooserViewSet):
 
         return attrs
 
+    def get_chosen_multiple_view_attrs(self):
+        attrs = super().get_chosen_view_attrs()
+        if hasattr(self, 'model'):
+            attrs['model'] = self.model
+
+        return attrs
+
 
 class DRFChooserViewSet(ChooserViewSet):
     chooser_mixin_class = DRFChooserMixin
@@ -699,6 +789,15 @@ class DRFChooserViewSet(ChooserViewSet):
         return attrs
 
     def get_chosen_view_attrs(self):
+        attrs = super().get_chosen_view_attrs()
+        if hasattr(self, 'api_base_url'):
+            attrs['api_base_url'] = self.api_base_url
+        if hasattr(self, 'title_field_name'):
+            attrs['title_field_name'] = self.title_field_name
+
+        return attrs
+
+    def get_chosen_multiple_view_attrs(self):
         attrs = super().get_chosen_view_attrs()
         if hasattr(self, 'api_base_url'):
             attrs['api_base_url'] = self.api_base_url

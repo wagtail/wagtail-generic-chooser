@@ -11,6 +11,15 @@
     </form>
 {% endif %}
 
-<div id="search-results" class="listing">
-    {% include results_template %}
-</div>
+{% if is_multiple_choice %}
+    <form action="{{ chosen_multiple_url }}" method="GET" data-multiple-choice-form>
+        <div id="search-results" class="listing">
+            {% include results_template %}
+        </div>
+        <input type="submit" value="{% trans 'Confirm selection' %}" class="button" />
+    </form>
+{% else %}
+    <div id="search-results" class="listing">
+        {% include results_template %}
+    </div>
+{% endif %}
