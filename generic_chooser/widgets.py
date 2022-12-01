@@ -164,7 +164,9 @@ class AdminChooser(WidgetWithScript, widgets.Input):
         })
 
     def js_opts(self):
-        return {}
+        return {
+            'modalURL': self.get_choose_modal_url(),
+        }
 
     def render_js_init(self, id_, name, value):
         opts = self.js_opts()

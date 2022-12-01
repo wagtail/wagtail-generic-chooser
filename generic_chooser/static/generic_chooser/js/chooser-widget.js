@@ -20,6 +20,7 @@ function ChooserWidget(id, opts) {
     }
     this.chooseButton = $('.action-choose', this.chooserElement);
     this.idForLabel = null;
+    this.baseModalURL = opts.modalURL || this.chooserElement.data('choose-modal-url');
 
     this.modalResponses = {};
     this.modalResponses[opts.modalWorkflowResponseName || 'chosen'] = function(data) {
@@ -41,7 +42,7 @@ function ChooserWidget(id, opts) {
 }
 
 ChooserWidget.prototype.getModalURL = function() {
-    return this.chooserElement.data('choose-modal-url');
+    return this.baseModalURL;
 };
 
 ChooserWidget.prototype.openModal = function() {
@@ -99,4 +100,16 @@ ChooserWidgetFactory.prototype.render = function(placeholder, name, id, initialS
     chooser.setState(initialState);
     return chooser;
 };
+ChooserWidgetFactory.prototype.openModal = function(callback, urlParams) {
+    var responses = [];
+    responses[this.opts.modalWorkflowResponseName || 'chosen'] = callback;
+
+    ModalWorkflow({
+        url: this.opts.modalURL,
+        urlParams: urlParams,
+        onload: GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS,
+        responses: responses
+    });
+};
+
 window.WagtailGenericChooserWidgetFactory = ChooserWidgetFactory;
