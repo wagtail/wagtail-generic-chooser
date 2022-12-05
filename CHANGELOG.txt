@@ -1,3 +1,9 @@
+0.4.3 (2022-12-05)
+------------------
+
+* Fix: Populate widget title element correctly on Wagtail 4 (Matt Westcott)
+
+
 0.4.2 (2022-11-28)
 ------------------
 
