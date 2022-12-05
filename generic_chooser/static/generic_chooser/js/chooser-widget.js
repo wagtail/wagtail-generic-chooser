@@ -24,12 +24,7 @@ function ChooserWidget(id, opts) {
 
     this.modalResponses = {};
     this.modalResponses[opts.modalWorkflowResponseName || 'chosen'] = function(data) {
-        self.setState({
-            'value': data.id,
-            'title': data.string,
-            'edit_item_url': data.edit_link
-        });
-        self.inputElement.trigger('change');
+        self.setStateFromModalData(data);
     };
 
     this.chooseButton.on('click', function() {
@@ -39,6 +34,9 @@ function ChooserWidget(id, opts) {
     $('.action-clear', this.chooserElement).on('click', function() {
         self.setState(null);
     });
+
+    // attach a reference to this widget object onto the root element of the chooser
+    this.chooserElement.get(0).widget = this;
 }
 
 ChooserWidget.prototype.getModalURL = function() {
@@ -52,6 +50,14 @@ ChooserWidget.prototype.openModal = function() {
         responses: this.modalResponses
     });
 };
+
+ChooserWidget.prototype.setStateFromModalData = function(data) {
+    this.setState({
+        'value': data.id,
+        'title': data.string,
+        'edit_item_url': data.edit_link
+    });
+}
 
 ChooserWidget.prototype.setState = function(newState) {
     if (newState && newState.value !== null && newState.value !== '') {
@@ -68,6 +74,7 @@ ChooserWidget.prototype.setState = function(newState) {
         this.inputElement.val('');
         this.chooserElement.addClass('blank');
     }
+    this.inputElement.trigger('change');
 };
 
 ChooserWidget.prototype.getState = function() {
@@ -111,5 +118,9 @@ ChooserWidgetFactory.prototype.openModal = function(callback, urlParams) {
         responses: responses
     });
 };
+ChooserWidgetFactory.prototype.getById = function(id) {
+    /* retrieve the widget object corresponding to the given HTML ID */
+    return document.getElementById(id + '-chooser').widget;
+}
 
 window.WagtailGenericChooserWidgetFactory = ChooserWidgetFactory;
