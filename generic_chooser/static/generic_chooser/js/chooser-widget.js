@@ -43,9 +43,14 @@ ChooserWidget.prototype.getModalURL = function() {
     return this.baseModalURL;
 };
 
+ChooserWidget.prototype.getModalURLParams = function() {
+    return {};
+};
+
 ChooserWidget.prototype.openModal = function() {
     ModalWorkflow({
         url: this.getModalURL(),
+        urlParams: this.getModalURLParams(),
         onload: GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS,
         responses: this.modalResponses
     });
@@ -107,13 +112,23 @@ ChooserWidgetFactory.prototype.render = function(placeholder, name, id, initialS
     chooser.setState(initialState);
     return chooser;
 };
+ChooserWidgetFactory.prototype.getModalURLParams = function() {
+    return {};
+};
 ChooserWidgetFactory.prototype.openModal = function(callback, urlParams) {
     var responses = [];
     responses[this.opts.modalWorkflowResponseName || 'chosen'] = callback;
 
+    var fullURLParams = this.getModalURLParams();
+    if (urlParams) {
+        for (key in urlParams) {
+            fullURLParams[key] = urlParams[key];
+        }
+    }
+
     ModalWorkflow({
         url: this.opts.modalURL,
-        urlParams: urlParams,
+        urlParams: fullURLParams,
         onload: GENERIC_CHOOSER_MODAL_ONLOAD_HANDLERS,
         responses: responses
     });
