@@ -20,14 +20,10 @@ function LinkedFieldChooserWidget(id, opts) {
     this.linkedFields = opts.linkedFields || {};
 }
 
-LinkedFieldChooserWidget.prototype = Object.create(ChooserWidget.prototype);
-
-LinkedFieldChooserWidget.prototype.getModalURL = function() {
-    var url = ChooserWidget.prototype.getModalURL.call(this);
-
-    queryParams = [];
-    for (var param in this.linkedFields) {
-        var lookup = this.linkedFields[param];
+function getLinkedFieldQueryParams(linkedFields, chooserId) {
+    var queryParams = {};
+    for (var param in linkedFields) {
+        var lookup = linkedFields[param];
         var val;
         if (typeof(lookup) == 'string') {
             val = $(document).find(lookup).val();
@@ -35,8 +31,8 @@ LinkedFieldChooserWidget.prototype.getModalURL = function() {
             val = $(document).find('#' + lookup.id).val();
         } else if (lookup.selector) {
             val = $(document).find(lookup.selector).val();
-        } else if (lookup.match) {
-            var match = this.id.match(new RegExp(lookup.match));
+        } else if (lookup.match && chooserId) {
+            var match = chooserId.match(new RegExp(lookup.match));
             if (match) {
                 var id = match[0];
                 if (lookup.append) {
@@ -46,15 +42,16 @@ LinkedFieldChooserWidget.prototype.getModalURL = function() {
             }
         }
         if (val) {
-            queryParams.push({'name': param, 'value': val});
+            queryParams[param] = val;
         }
     }
-    if (url.indexOf('?') == -1) {
-        url += '?' + $.param(queryParams);
-    } else {
-        url += '&' + $.param(queryParams);
-    }
-    return url;
+    return queryParams;
+}
+
+LinkedFieldChooserWidget.prototype = Object.create(ChooserWidget.prototype);
+
+LinkedFieldChooserWidget.prototype.getModalURLParams = function() {
+    return getLinkedFieldQueryParams(this.linkedFields, this.id);
 }
 
 
@@ -64,5 +61,12 @@ function LinkedFieldChooserWidgetFactory(html, opts) {
     this.widgetClass = LinkedFieldChooserWidget;
 }
 LinkedFieldChooserWidgetFactory.prototype = Object.create(ChooserWidgetFactory.prototype);
+LinkedFieldChooserWidgetFactory.prototype.getModalURLParams = function() {
+    if (this.opts.linkedFields) {
+        return getLinkedFieldQueryParams(this.opts.linkedFields);
+    } else {
+        return {};
+    }
+};
 
 window.LinkedFieldChooserWidgetFactory = LinkedFieldChooserWidgetFactory;
