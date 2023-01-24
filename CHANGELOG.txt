@@ -1,3 +1,16 @@
+0.5.1 (2023-01-24)
+------------------
+
+* Fix: Ensure `LinkedFieldChooserWidgetFactory.openModal` passes the linked field URL parameters to the modal (Matt Westcott)
+
+
+0.5 (2022-12-05)
+----------------
+
+* Add support for multiple choice within chooser modal (Matt Westcott)
+* Add `openModal` and `getById` endpoints to ChooserWidgetFactory (Matt Westcott)
+
+
 0.4.3 (2022-12-05)
 ------------------
 
