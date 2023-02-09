@@ -1,36 +1,16 @@
 import json
 
+import requests
 from django.contrib.admin.utils import quote
 from django.core.exceptions import ObjectDoesNotExist
-from django.forms import widgets, Media
+from django.forms import Media, widgets
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-
-import requests
-
-from wagtail import VERSION as WAGTAIL_VERSION
+from wagtail.telepath import register
 from wagtail.utils.widgets import WidgetWithScript
+from wagtail.widget_adapters import WidgetAdapter
 
-try:
-    from wagtail.telepath import register
-except ImportError:
-    try:
-        # Wagtail<3.0
-        from wagtail.core.telepath import register
-    except ImportError:  # do-nothing fallback for Wagtail <2.13
-        def register(adapter, cls):
-            pass
-
-try:
-    from wagtail.widget_adapters import WidgetAdapter
-except ImportError:
-    try:
-        # Wagtail<3.0
-        from wagtail.core.widget_adapters import WidgetAdapter
-    except ImportError:  # do-nothing fallback for Wagtail <2.13
-        class WidgetAdapter:
-            pass
 
 class AdminChooser(WidgetWithScript, widgets.Input):
     input_type = 'hidden'
@@ -64,10 +44,7 @@ class AdminChooser(WidgetWithScript, widgets.Input):
     # chooser widget.
     choose_modal_url_name = None
 
-    if WAGTAIL_VERSION >= (4, 0):
-        template = "generic_chooser/widgets/chooser_v4.html"
-    else:
-        template = "generic_chooser/widgets/chooser.html"
+    template = "generic_chooser/widgets/chooser_v4.html"
 
     js_constructor_name = "ChooserWidget"
 
@@ -143,12 +120,9 @@ class AdminChooser(WidgetWithScript, widgets.Input):
         return super().render_html(name, value, attrs)
 
     def render_html(self, name, value, attrs):
-        if WAGTAIL_VERSION >= (2, 12):
-            # From Wagtail 2.12, get_value_data is called as a preprocessing step in
-            # WidgetWithScript before invoking render_html
-            value_data = value
-        else:
-            value_data = self.get_value_data(value)
+        # From Wagtail 2.12, get_value_data is called as a preprocessing step in
+        # WidgetWithScript before invoking render_html
+        value_data = value
 
         original_field_html = self.render_input_html(name, value_data['value'], attrs)
 
@@ -194,17 +168,11 @@ class AdminChooser(WidgetWithScript, widgets.Input):
         super().__init__(**kwargs)
 
     class Media:
-        if WAGTAIL_VERSION >= (3, 0):
-            js = [
-                'generic_chooser/js/tabs.js',
-                'generic_chooser/js/chooser-modal.js',
-                'generic_chooser/js/chooser-widget.js',
-            ]
-        else:
-            js = [
-                'generic_chooser/js/chooser-modal.js',
-                'generic_chooser/js/chooser-widget.js',
-            ]
+        js = [
+            'generic_chooser/js/tabs.js',
+            'generic_chooser/js/chooser-modal.js',
+            'generic_chooser/js/chooser-widget.js',
+        ]
 
 
 class AdminChooserAdapter(WidgetAdapter):
@@ -219,19 +187,12 @@ class AdminChooserAdapter(WidgetAdapter):
         ]
 
     class Media:
-        if WAGTAIL_VERSION >= (3, 0):
-            js = [
-                'generic_chooser/js/tabs.js',
-                'generic_chooser/js/chooser-modal.js',
-                "generic_chooser/js/chooser-widget.js",
-                "generic_chooser/js/chooser-widget-telepath.js",
-            ]
-        else:
-            js = [
-                'generic_chooser/js/chooser-modal.js',
-                "generic_chooser/js/chooser-widget.js",
-                "generic_chooser/js/chooser-widget-telepath.js",
-            ]
+        js = [
+            'generic_chooser/js/tabs.js',
+            'generic_chooser/js/chooser-modal.js',
+            "generic_chooser/js/chooser-widget.js",
+            "generic_chooser/js/chooser-widget-telepath.js",
+        ]
 
 
 register(AdminChooserAdapter(), AdminChooser)
@@ -281,36 +242,23 @@ class LinkedFieldMixin:
 
     @property
     def media(self):
-        if WAGTAIL_VERSION >= (3, 0):
-            return super().media + Media(js=[
-                'generic_chooser/js/tabs.js',
-                'generic_chooser/js/chooser-widget.js',
-                'generic_chooser/js/linked-field-chooser-widget.js',
-            ])
-        else:
-            return super().media + Media(js=[
-                'generic_chooser/js/chooser-widget.js',
-                'generic_chooser/js/linked-field-chooser-widget.js',
-            ])
+        return super().media + Media(js=[
+            'generic_chooser/js/tabs.js',
+            'generic_chooser/js/chooser-widget.js',
+            'generic_chooser/js/linked-field-chooser-widget.js',
+        ])
 
 
 class LinkedFieldChooserAdapter(AdminChooserAdapter):
     js_constructor = 'wagtail_generic_chooser.widgets.LinkedFieldChooser'
 
     class Media:
-        if WAGTAIL_VERSION >= (3, 0):
-            js = [
-                'generic_chooser/js/tabs.js',
-                'generic_chooser/js/chooser-widget.js',
-                "generic_chooser/js/linked-field-chooser-widget.js",
-                "generic_chooser/js/linked-field-chooser-widget-telepath.js",
-            ]
-        else:
-            js = [
-                'generic_chooser/js/chooser-widget.js',
-                "generic_chooser/js/linked-field-chooser-widget.js",
-                "generic_chooser/js/linked-field-chooser-widget-telepath.js",
-            ]
+        js = [
+            'generic_chooser/js/tabs.js',
+            'generic_chooser/js/chooser-widget.js',
+            "generic_chooser/js/linked-field-chooser-widget.js",
+            "generic_chooser/js/linked-field-chooser-widget-telepath.js",
+        ]
 
 
 register(LinkedFieldChooserAdapter(), LinkedFieldMixin)
