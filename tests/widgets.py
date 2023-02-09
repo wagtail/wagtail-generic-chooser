@@ -1,9 +1,4 @@
-try:
-    from wagtail.models import Site
-except ImportError:
-    # Wagtail<3.0
-    from wagtail.core.models import Site
-
+from wagtail.models import Site
 from generic_chooser.widgets import AdminChooser
 
 

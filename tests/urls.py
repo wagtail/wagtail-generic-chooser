@@ -2,12 +2,7 @@ from django.conf.urls import include
 from django.urls import path
 from rest_framework import routers, serializers, viewsets
 from wagtail.admin import urls as wagtailadmin_urls
-try:
-    from wagtail import urls as wagtail_urls
-except ImportError:
-    # Wagtail<3.0
-    from wagtail.core import urls as wagtail_urls
-
+from wagtail import urls as wagtail_urls
 from .api import api_router as wagtail_api_router
 from .models import Person
 

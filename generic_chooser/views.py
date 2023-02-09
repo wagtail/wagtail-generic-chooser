@@ -1,6 +1,6 @@
-import requests
 import urllib
 
+import requests
 from django.contrib.admin.utils import quote, unquote
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.paginator import Page, Paginator
@@ -12,18 +12,10 @@ from django.utils.text import camel_case_to_spaces, slugify
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic.base import ContextMixin
-
-from wagtail import VERSION as WAGTAIL_VERSION
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
 from wagtail.admin.viewsets.base import ViewSet
-
-try:
-    from wagtail.permission_policies import ModelPermissionPolicy
-except ImportError:
-    # Wagtail<3.0
-    from wagtail.core.permission_policies import ModelPermissionPolicy
-
+from wagtail.permission_policies import ModelPermissionPolicy
 from wagtail.search.backends import get_search_backend
 from wagtail.search.index import class_is_indexed
 
@@ -520,10 +512,7 @@ class BaseChooseView(ModalPageFurnitureMixin, ContextMixin, View):
     icon = 'snippet'
     page_title = _("Choose")
 
-    if WAGTAIL_VERSION >= (3, 0):
-        template = 'generic_chooser/tabbed_modal_v3.html'
-    else:
-        template = 'generic_chooser/tabbed_modal.html'
+    template = 'generic_chooser/tabbed_modal_v3.html'
 
     def get_template(self):
         return self.template

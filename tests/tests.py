@@ -6,13 +6,7 @@ from django import forms
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
-from wagtail import VERSION as WAGTAIL_VERSION
-
-try:
-    from wagtail.models import Page, Site
-except ImportError:
-    # Wagtail<3.0
-    from wagtail.core.models import Page, Site
+from wagtail.models import Page, Site
 
 from .models import Person
 from .widgets import SiteChooser
@@ -34,20 +28,14 @@ class TestChooseView(TestCase):
 
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
-        if WAGTAIL_VERSION >= (2, 10):
-            self.assertIn(
-                'Choose a site',
-                response_json['html']
-            )
-            self.assertInHTML(
-                '<use href="#icon-site"></use>',
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<h1 class="icon icon-site">Choose a site</h1>',
-                response_json['html']
-            )
+        self.assertIn(
+            'Choose a site',
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<use href="#icon-site"></use>',
+            response_json['html']
+        )
 
         self.assertInHTML(
             '<a class="item-choice" href="/admin/site-chooser/1/">localhost [default]</a>',
@@ -121,16 +109,10 @@ class TestChooseView(TestCase):
         self.assertEqual(response_json['step'], 'choose')
 
         # response should include a search box
-        if WAGTAIL_VERSION >= (4, 2):
-            self.assertInHTML(
-                '<input type="text" name="q" placeholder="Search" id="id_q">',
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<input type="text" name="q" placeholder="Search" required id="id_q">',
-                response_json['html']
-            )
+        self.assertInHTML(
+            '<input type="text" name="q" placeholder="Search" id="id_q">',
+            response_json['html']
+        )
         self.assertInHTML(
             '<a class="item-choice" href="/admin/page-chooser/%d/">A red page</a>' % red_page.id,
             response_json['html']
@@ -174,16 +156,10 @@ class TestChooseView(TestCase):
 
         # Admin has create permission for sites, so should get the create form
         response_json = json.loads(response.content)
-        if WAGTAIL_VERSION >= (3, 0):
-            self.assertIn(
-                'id="tab-label-site-chooser-create"',
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<a href="#site-chooser-create">Create</a>',
-                response_json['html']
-            )
+        self.assertIn(
+            'id="tab-label-site-chooser-create"',
+            response_json['html']
+        )
 
         self.assertInHTML(
             '<input type="text" name="site-chooser-create-form-hostname" maxlength="255" required id="id_site-chooser-create-form-hostname">',
@@ -218,10 +194,7 @@ class TestChooseView(TestCase):
             'site-chooser-create-form-site_name': 'foo',
             'site-chooser-create-form-root_page': Page.objects.filter(depth=2).first().pk,
         })
-        if WAGTAIL_VERSION >= (2, 11):
-            self.assertRedirects(response, '/admin/')
-        else:
-            self.assertEqual(response.status_code, 403)
+        self.assertRedirects(response, '/admin/')
 
     def test_post_invalid_creation_form(self):
         self.assertTrue(
@@ -240,31 +213,19 @@ class TestChooseView(TestCase):
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
 
-        if WAGTAIL_VERSION >= (3, 0):
-            self.assertIn(
-                'id="tab-label-site-chooser-create"',
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<li class="active"><a href="#site-chooser-create">Create</a></li>',
-                response_json['html']
-            )
+        self.assertIn(
+            'id="tab-label-site-chooser-create"',
+            response_json['html']
+        )
 
-        if WAGTAIL_VERSION >= (4, 0):
-            self.assertInHTML(
-                (
-                    '<p class="error-message">'
-                    'This field is required.'
-                    '</p>'
-                ),
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<span>This field is required.</span>',
-                response_json['html']
-            )
+        self.assertInHTML(
+            (
+                '<p class="error-message">'
+                'This field is required.'
+                '</p>'
+            ),
+            response_json['html']
+        )
 
     def test_post_valid_creation_form(self):
         self.assertTrue(
@@ -380,20 +341,14 @@ class TestAPIChooseView(FakeRequestsTestCase):
 
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
-        if WAGTAIL_VERSION >= (2, 10):
-            self.assertIn(
-                'Choose a page',
-                response_json['html']
-            )
-            self.assertInHTML(
-                '<use href="#icon-page"></use>',
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<h1 class="icon icon-page">Choose a page</h1>',
-                response_json['html']
-            )
+        self.assertIn(
+            'Choose a page',
+            response_json['html']
+        )
+        self.assertInHTML(
+            '<use href="#icon-page"></use>',
+            response_json['html']
+        )
         self.assertInHTML(
             '<a class="item-choice" href="/admin/api-page-chooser/%d/">A red page</a>' % red_page.id,
             response_json['html']
@@ -450,16 +405,10 @@ class TestAPIChooseView(FakeRequestsTestCase):
         self.assertEqual(response_json['step'], 'choose')
 
         # response should include a search box
-        if WAGTAIL_VERSION >= (4, 2):
-            self.assertInHTML(
-                '<input type="text" name="q" placeholder="Search" id="id_q">',
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<input type="text" name="q" placeholder="Search" required id="id_q">',
-                response_json['html']
-            )
+        self.assertInHTML(
+            '<input type="text" name="q" placeholder="Search" id="id_q">',
+            response_json['html']
+        )
         self.assertInHTML(
             '<a class="item-choice" href="/admin/api-page-chooser/%d/">A red page</a>' % red_page.id,
             response_json['html']
@@ -531,16 +480,10 @@ class TestAPICreateForm(FakeRequestsTestCase):
         # Create form should be displayed
         response_json = json.loads(response.content)
 
-        if WAGTAIL_VERSION >= (3, 0):
-            self.assertIn(
-                'id="tab-label-person-chooser-create"',
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<a href="#person-chooser-create">Create</a>',
-                response_json['html']
-            )
+        self.assertIn(
+            'id="tab-label-person-chooser-create"',
+            response_json['html']
+        )
 
         self.assertInHTML(
             '<input type="text" name="person-chooser-create-form-first_name" required id="id_person-chooser-create-form-first_name">',
@@ -560,31 +503,19 @@ class TestAPICreateForm(FakeRequestsTestCase):
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'choose')
 
-        if WAGTAIL_VERSION >= (3, 0):
-            self.assertIn(
-                'id="tab-label-person-chooser-create"',
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<li class="active"><a href="#person-chooser-create">Create</a></li>',
-                response_json['html']
-            )
+        self.assertIn(
+            'id="tab-label-person-chooser-create"',
+            response_json['html']
+        )
 
-        if WAGTAIL_VERSION >= (4, 0):
-            self.assertInHTML(
-                (
-                    '<p class="error-message">'
-                    'This field is required.'
-                    '</p>'
-                ),
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<span>This field is required.</span>',
-                response_json['html']
-            )
+        self.assertInHTML(
+            (
+                '<p class="error-message">'
+                'This field is required.'
+                '</p>'
+            ),
+            response_json['html']
+        )
 
     def test_post_valid(self):
         response = self.client.post('/admin/person-chooser/', {
@@ -614,7 +545,4 @@ class TestChooserWidget(TestCase):
         localhost = Site.objects.get(hostname='localhost')
         form = SiteForm(initial={'site': localhost})
         html = form.as_p()
-        if WAGTAIL_VERSION >= (4, 0):
-            self.assertIn('<div class="chooser__title" data-chooser-title>localhost [default]</div>', html)
-        else:
-            self.assertIn('<span class="title" data-chooser-title>localhost [default]</span>', html)
+        self.assertIn('<div class="chooser__title" data-chooser-title>localhost [default]</div>', html)
