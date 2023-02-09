@@ -8,7 +8,7 @@ It is intended that `wagtail-generic-chooser` will be expanded to cover all the 
 
 ## Requirements
 
-Wagtail 2.4 or higher
+Wagtail 4.1 or higher
 
 ## Installation
 
@@ -50,7 +50,7 @@ The viewset can then be registered through Wagtail's `register_admin_viewset` ho
 ```python
 # myapp/wagtail_hooks.py
 
-from wagtail.core import hooks
+from wagtail import hooks
 
 from myapp.views import PersonChooserViewSet
 
@@ -269,7 +269,7 @@ See the base class implementations in `generic_chooser/widgets.py`.
 A chooser widget as defined above can be wrapped in Wagtail's `ChooserBlock` class to be used inside a StreamField. As of Wagtail 2.13, the block definition should be as follows:
 
 ```python
-from wagtail.core.blocks import ChooserBlock
+from wagtail.blocks import ChooserBlock
 
 
 class PersonChooserBlock(ChooserBlock):
