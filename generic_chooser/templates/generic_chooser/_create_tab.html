@@ -1,3 +1,5 @@
+{% load wagtailcore_tags %}
+
 <form class="create-form" action="{{ choose_url }}" method="POST" {% if create_form.is_multipart %}enctype="multipart/form-data"{% endif %} novalidate>
     {% csrf_token %}
     {% block hidden_fields %}
@@ -12,7 +14,15 @@
         {% endblock %}
         <li>
             {% if create_form_is_long_running %}
-                <button type="submit" class="button button-longrunning" data-clicked-text="{{ create_form_submitted_label }}"><span class="icon icon-spinner"></span><em>{{ create_form_submit_label }}</em></button>
+                {% wagtail_version as current_version %}
+                {% if current_version >= "5.0.0" %}
+                    <button type="submit" class="button button-longrunning" data-controller="w-progress" data-action="w-progress#activate" data-w-progress-active-value="{{ create_form_submitted_label }}">
+                        <span class="icon icon-spinner"></span>
+                        <em data-w-progress-target="label">{{ create_form_submit_label }}</em>
+                    </button>
+                {% else %}
+                    <button type="submit" class="button button-longrunning" data-clicked-text="{{ create_form_submitted_label }}"><span class="icon icon-spinner"></span><em>{{ create_form_submit_label }}</em></button>
+                {% endif %}
             {% else %}
                 <button type="submit" class="button">{{ create_form_submit_label }}</button>
             {% endif %}
