@@ -60,7 +60,7 @@ class AdminChooser(WidgetWithScript, widgets.Input):
             return None
         else:
             return reverse(self.create_item_url_name)
-    
+
     def get_edit_item_url(self, instance):
         if self.edit_item_url_name is None:
             return None
