@@ -44,7 +44,7 @@ class AdminChooser(WidgetWithScript, widgets.Input):
     # chooser widget.
     choose_modal_url_name = None
 
-    template = "generic_chooser/widgets/chooser_v4.html"
+    template = "generic_chooser/widgets/chooser.html"
 
     js_constructor_name = "ChooserWidget"
 

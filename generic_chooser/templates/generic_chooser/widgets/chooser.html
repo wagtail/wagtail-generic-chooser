@@ -1,3 +1,5 @@
+{% load wagtailadmin_tags %}
+
 {% comment %}
     Either the chosen or unchosen div will be shown, depending on the presence
     of the 'blank' class on the container.
@@ -9,11 +11,16 @@
 <div id="{{ attrs.id }}-chooser" class="chooser {% block chooser_class %}{{ widget.classname }}{% endblock %} {% if is_empty %}blank{% endif %}" {% if choose_modal_url %}data-choose-modal-url="{{ choose_modal_url }}"{% endif %}>
 
     <div class="chosen">
+        {% block chosen_icon %}
+            <div class="chooser__preview" role="presentation">
+                {% icon name=widget.icon %}
+            </div>
+        {% endblock chosen_icon %}
         {% block chosen_state_view %}
-            <span class="title" data-chooser-title>{{ title }}</span>
+            <div class="chooser__title" data-chooser-title>{{ title }}</div>
         {% endblock %}
 
-        <ul class="actions">
+        <ul class="chooser__actions">
             {% if not widget.is_required %}
                 <li><button type="button" class="button action-clear button-small button-secondary">{{ widget.clear_choice_text }}</button></li>
             {% endif %}
