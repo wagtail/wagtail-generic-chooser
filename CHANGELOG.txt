@@ -1,7 +1,7 @@
 Unreleased
 ------------------
 
-* Wagtail 4.2 and 5.0 support (Katherine Domingo)
+* Wagtail 4.2, 5.0 and 5.1 support (Katherine Domingo, Matt Westcott)
 * Remove conditional code for Wagtail versions prior to 4.1 (Katherine Domingo)
 
 
