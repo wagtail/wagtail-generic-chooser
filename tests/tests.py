@@ -253,9 +253,15 @@ class TestChooseView(TestCase):
         # should receive a step=chosen response
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'chosen')
+
+        if WAGTAIL_VERSION >= (5, 2):
+            expected_url = "/admin/sites/edit/%d/" % site.id
+        else:
+            expected_url = "/admin/sites/%d/" % site.id
+
         self.assertEqual(
             response_json['result'],
-            {"id": str(site.id), "string": "foo", "edit_link": "/admin/sites/%d/" % site.id}
+            {"id": str(site.id), "string": "foo", "edit_link": expected_url}
         )
 
 
@@ -272,9 +278,15 @@ class TestChosenView(TestCase):
 
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'chosen')
+
+        if WAGTAIL_VERSION >= (5, 2):
+            expected_url = "/admin/sites/edit/1/"
+        else:
+            expected_url = "/admin/sites/1/"
+
         self.assertEqual(
             response_json['result'],
-            {"id": "1", "string": "localhost [default]", "edit_link": "/admin/sites/1/"}
+            {"id": "1", "string": "localhost [default]", "edit_link": expected_url}
         )
 
 
