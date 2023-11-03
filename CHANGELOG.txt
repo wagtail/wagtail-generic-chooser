@@ -1,3 +1,11 @@
+0.6.1 (2023-11-03)
+------------------
+
+* Restore compatibility with Wagtail 4.1 (Matt Westcott)
+* Wagtail 5.2 support (Matt Westcott)
+* Provisional support for Wagtail 6.0 (Matt Westcott)
+
+
 0.6 (2023-07-26)
 ----------------
 
