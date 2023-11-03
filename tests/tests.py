@@ -115,11 +115,17 @@ class TestChooseView(TestCase):
                 '<input type="text" name="q" placeholder="Search" data-w-swap-target="input" id="id_q">',
                 response_json['html']
             )
-        else:
+        elif WAGTAIL_VERSION >= (4, 2):
             self.assertInHTML(
                 '<input type="text" name="q" placeholder="Search" id="id_q">',
                 response_json['html']
             )
+        else:
+            self.assertInHTML(
+                '<input type="text" name="q" placeholder="Search" required id="id_q">',
+                response_json['html']
+            )
+
         self.assertInHTML(
             '<a class="item-choice" href="/admin/page-chooser/%d/">A red page</a>' % red_page.id,
             response_json['html']
@@ -429,9 +435,14 @@ class TestAPIChooseView(FakeRequestsTestCase):
                 '<input type="text" name="q" placeholder="Search" data-w-swap-target="input" id="id_q">',
                 response_json['html']
             )
-        else:
+        elif WAGTAIL_VERSION >= (4, 2):
             self.assertInHTML(
                 '<input type="text" name="q" placeholder="Search" id="id_q">',
+                response_json['html']
+            )
+        else:
+            self.assertInHTML(
+                '<input type="text" name="q" placeholder="Search" required id="id_q">',
                 response_json['html']
             )
 
