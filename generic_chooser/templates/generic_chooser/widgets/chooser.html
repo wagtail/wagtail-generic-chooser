@@ -1,4 +1,5 @@
-{% load wagtailadmin_tags %}
+{% load wagtailcore_tags %}
+{% wagtail_version as current_version %}
 
 {% comment %}
     Either the chosen or unchosen div will be shown, depending on the presence
@@ -13,7 +14,11 @@
     <div class="chosen">
         {% block chosen_icon %}
             <div class="chooser__preview" role="presentation">
-                {% icon name=widget.icon classname="default" %}
+                {% if current_version >= "4.2.0" %}
+                    {% include "generic_chooser/widgets/icon_new.html" %}
+                {% else %}
+                    {% include "generic_chooser/widgets/icon_old.html" %}
+                {% endif %}
             </div>
         {% endblock chosen_icon %}
         {% block chosen_state_view %}
