@@ -1,10 +1,10 @@
 # wagtail-generic-chooser
 
+**This package is deprecated.** As of Wagtail 5.2, Wagtail's built-in [ChooserViewSet](https://docs.wagtail.org/en/stable/extending/generic_views.html#chooserviewset) provides all the functionality of the `wagtail-generic-choooser` package and will receive improvements as part of Wagtail's overall development. We recommend migrating your use of `wagtail-generic-chooser` to Wagtail's `ChooserViewSet`. This package will only receive maintenance updates as required to address blocking bugs and ensure compatibility with new Wagtail versions.
+
 `wagtail-generic-chooser` provides base classes for building chooser popups and form widgets for the Wagtail admin, matching the look and feel of Wagtail's built-in choosers for pages, documents, snippets and images.
 
 It differs from existing model chooser add-ons ([Naeka/wagtailmodelchooser](https://github.com/Naeka/wagtailmodelchooser/), [neon-jungle/wagtailmodelchooser](https://github.com/neon-jungle/wagtailmodelchooser), [springload/wagtailmodelchoosers](https://github.com/springload/wagtailmodelchoosers)) in that it is designed to be fully configurable through subclassing - in particular, it can be used on data sources other than Django models, such as REST API endpoints.
-
-It is intended that `wagtail-generic-chooser` will be expanded to cover all the functionality of Wagtail's built-in choosers, such as inline object creation forms, and will then be incorporated into Wagtail as the new base implementation of those built-in choosers - this will reduce code duplication and greatly simplify the process of building new admin apps.
 
 ## Requirements
 
