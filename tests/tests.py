@@ -100,9 +100,10 @@ class TestChooseView(TestCase):
         )
 
         homepage = Page.objects.get(depth=2)
-        red_page = homepage.add_child(title='A red page')
-        another_red_page = homepage.add_child(title='Another red page')
-        green_page = homepage.add_child(title='A green page')
+        with self.captureOnCommitCallbacks(execute=True):
+            red_page = homepage.add_child(title='A red page')
+            another_red_page = homepage.add_child(title='Another red page')
+            green_page = homepage.add_child(title='A green page')
 
         response = self.client.get('/admin/page-chooser/')
         self.assertEqual(response.status_code, 200)
@@ -420,9 +421,10 @@ class TestAPIChooseView(FakeRequestsTestCase):
 
     def test_search(self):
         homepage = Page.objects.get(depth=2)
-        red_page = homepage.add_child(title='A red page')
-        another_red_page = homepage.add_child(title='Another red page')
-        green_page = homepage.add_child(title='A green page')
+        with self.captureOnCommitCallbacks(execute=True):
+            red_page = homepage.add_child(title='A red page')
+            another_red_page = homepage.add_child(title='Another red page')
+            green_page = homepage.add_child(title='A green page')
 
         response = self.client.get('/admin/api-page-chooser/')
         self.assertEqual(response.status_code, 200)
