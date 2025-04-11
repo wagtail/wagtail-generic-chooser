@@ -6,13 +6,13 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.forms import Media, widgets
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from wagtail.telepath import register
-from wagtail.utils.widgets import WidgetWithScript
 from wagtail.widget_adapters import WidgetAdapter
 
 
-class AdminChooser(WidgetWithScript, widgets.Input):
+class AdminChooser(widgets.Input):
     input_type = 'hidden'
     choose_one_text = _("Choose an item")
     choose_another_text = _("Choose another item")
@@ -51,6 +51,23 @@ class AdminChooser(WidgetWithScript, widgets.Input):
     # when looping over form fields, this one should appear in visible_fields, not hidden_fields
     # despite the underlying input being type="hidden"
     is_hidden = False
+
+    def render(self, name, value, attrs=None, renderer=None):
+        # no point trying to come up with sensible semantics for when 'id' is missing from attrs,
+        # so let's make sure it fails early in the process
+        try:
+            id_ = attrs["id"]
+        except (KeyError, TypeError):
+            raise TypeError(
+                "AdminChooser cannot be rendered without an 'id' attribute"
+            )
+
+        value_data = self.get_value_data(value)
+        widget_html = self.render_html(name, value_data, attrs)
+
+        js = self.render_js_init(id_, name, value_data)
+        out = f"{widget_html}<script>{js}</script>"
+        return mark_safe(out)
 
     def get_instance(self, value):
         return self.model.objects.get(pk=value)
@@ -117,7 +134,7 @@ class AdminChooser(WidgetWithScript, widgets.Input):
 
     def render_input_html(self, name, value, attrs):
         # render the HTML for just the (hidden) input field
-        return super().render_html(name, value, attrs)
+        return super().render(name, value, attrs)
 
     def render_html(self, name, value, attrs):
         value_data = value
