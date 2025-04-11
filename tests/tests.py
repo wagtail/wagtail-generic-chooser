@@ -6,7 +6,6 @@ from django import forms
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
-from wagtail import VERSION as WAGTAIL_VERSION
 from wagtail.models import Page, Site
 
 from .models import Person
@@ -111,21 +110,10 @@ class TestChooseView(TestCase):
         self.assertEqual(response_json['step'], 'choose')
 
         # response should include a search box
-        if WAGTAIL_VERSION >= (5, 1):
-            self.assertInHTML(
-                '<input type="text" name="q" placeholder="Search" data-w-swap-target="input" id="id_q">',
-                response_json['html']
-            )
-        elif WAGTAIL_VERSION >= (4, 2):
-            self.assertInHTML(
-                '<input type="text" name="q" placeholder="Search" id="id_q">',
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<input type="text" name="q" placeholder="Search" required id="id_q">',
-                response_json['html']
-            )
+        self.assertInHTML(
+            '<input type="text" name="q" placeholder="Search" data-w-swap-target="input" id="id_q">',
+            response_json['html']
+        )
 
         self.assertInHTML(
             '<a class="item-choice" href="/admin/page-chooser/%d/">A red page</a>' % red_page.id,
@@ -261,10 +249,7 @@ class TestChooseView(TestCase):
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'chosen')
 
-        if WAGTAIL_VERSION >= (5, 2):
-            expected_url = "/admin/sites/edit/%d/" % site.id
-        else:
-            expected_url = "/admin/sites/%d/" % site.id
+        expected_url = "/admin/sites/edit/%d/" % site.id
 
         self.assertEqual(
             response_json['result'],
@@ -286,10 +271,7 @@ class TestChosenView(TestCase):
         response_json = json.loads(response.content)
         self.assertEqual(response_json['step'], 'chosen')
 
-        if WAGTAIL_VERSION >= (5, 2):
-            expected_url = "/admin/sites/edit/1/"
-        else:
-            expected_url = "/admin/sites/1/"
+        expected_url = "/admin/sites/edit/1/"
 
         self.assertEqual(
             response_json['result'],
@@ -432,21 +414,10 @@ class TestAPIChooseView(FakeRequestsTestCase):
         self.assertEqual(response_json['step'], 'choose')
 
         # response should include a search box
-        if WAGTAIL_VERSION >= (5, 1):
-            self.assertInHTML(
-                '<input type="text" name="q" placeholder="Search" data-w-swap-target="input" id="id_q">',
-                response_json['html']
-            )
-        elif WAGTAIL_VERSION >= (4, 2):
-            self.assertInHTML(
-                '<input type="text" name="q" placeholder="Search" id="id_q">',
-                response_json['html']
-            )
-        else:
-            self.assertInHTML(
-                '<input type="text" name="q" placeholder="Search" required id="id_q">',
-                response_json['html']
-            )
+        self.assertInHTML(
+            '<input type="text" name="q" placeholder="Search" data-w-swap-target="input" id="id_q">',
+            response_json['html']
+        )
 
         self.assertInHTML(
             '<a class="item-choice" href="/admin/api-page-chooser/%d/">A red page</a>' % red_page.id,

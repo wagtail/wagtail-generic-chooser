@@ -8,7 +8,7 @@ It differs from existing model chooser add-ons ([Naeka/wagtailmodelchooser](http
 
 ## Requirements
 
-Wagtail 4.1 or higher
+Wagtail 5.2 or higher
 
 ## Installation
 
