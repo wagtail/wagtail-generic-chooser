@@ -120,7 +120,10 @@ class AdminChooser(widgets.Input):
         return super().render(name, value, attrs)
 
     def render(self, name, value, attrs, renderer=None):
-        value_data = value
+        if isinstance(value, dict):
+            value_data = value
+        else:
+            value_data = self.get_value_data(value)
 
         original_field_html = self.render_input_html(name, value_data['value'], attrs)
 
