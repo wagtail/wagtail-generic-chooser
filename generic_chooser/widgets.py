@@ -52,23 +52,6 @@ class AdminChooser(widgets.Input):
     # despite the underlying input being type="hidden"
     is_hidden = False
 
-    def render(self, name, value, attrs=None, renderer=None):
-        # no point trying to come up with sensible semantics for when 'id' is missing from attrs,
-        # so let's make sure it fails early in the process
-        try:
-            id_ = attrs["id"]
-        except (KeyError, TypeError):
-            raise TypeError(
-                "AdminChooser cannot be rendered without an 'id' attribute"
-            )
-
-        value_data = self.get_value_data(value)
-        widget_html = self.render_html(name, value_data, attrs)
-
-        js = self.render_js_init(id_, name, value_data)
-        out = f"{widget_html}<script>{js}</script>"
-        return mark_safe(out)
-
     def get_instance(self, value):
         return self.model.objects.get(pk=value)
 
@@ -136,7 +119,7 @@ class AdminChooser(widgets.Input):
         # render the HTML for just the (hidden) input field
         return super().render(name, value, attrs)
 
-    def render_html(self, name, value, attrs):
+    def render(self, name, value, attrs):
         value_data = value
 
         original_field_html = self.render_input_html(name, value_data['value'], attrs)
@@ -156,17 +139,11 @@ class AdminChooser(widgets.Input):
         return {
             'modalURL': self.get_choose_modal_url(),
         }
-
-    def render_js_init(self, id_, name, value):
-        opts = self.js_opts()
-        if opts:
-            return "new {constructor}({id}, {opts});".format(
-                constructor=self.js_constructor_name, id=json.dumps(id_), opts=json.dumps(opts)
-            )
-        else:
-            return "new {constructor}({id});".format(
-                constructor=self.js_constructor_name, id=json.dumps(id_)
-            )
+    
+    def build_attrs(self, *args, **kwargs):
+        attrs = super().build_attrs(*args, **kwargs)
+        attrs["data-controller"] = self.js_constructor_name
+        attrs["data-opts"] = json.dumps(self.js_opts())
 
     def __init__(self, **kwargs):
         # allow choose_one_text / choose_another_text to be overridden per-instance
@@ -187,6 +164,7 @@ class AdminChooser(widgets.Input):
             'generic_chooser/js/tabs.js',
             'generic_chooser/js/chooser-modal.js',
             'generic_chooser/js/chooser-widget.js',
+            # 'generic_chooser/js/chooser-controller.js',
         ]
 
 
@@ -195,7 +173,7 @@ class AdminChooserAdapter(WidgetAdapter):
 
     def js_args(self, widget):
         return [
-            widget.render_html(
+            widget.render(
                 "__NAME__", widget.get_value_data(None), attrs={"id": "__ID__"}
             ),
             widget.js_opts(),

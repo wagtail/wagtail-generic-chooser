@@ -12,7 +12,8 @@ function ChooserWidget(id, opts) {
     this.id = id;
     this.chooserElement = $('#' + id + '-chooser');
     this.titleElement = this.chooserElement.find('[data-chooser-title]');
-    this.inputElement = $('#' + id);
+    // TODO: use ID to find input, instead of name
+    this.inputElement = $("input[name=" + id + "]");
     this.editLinkElement = this.chooserElement.find('.edit-link');
     this.editLinkWrapper = this.chooserElement.find('.edit-link-wrapper');
     if (!this.editLinkElement.attr('href')) {
