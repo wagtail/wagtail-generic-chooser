@@ -1,4 +1,3 @@
-console.log("Loading ChooserWidgetController...", window.ChooserWidget);
 class ChooserWidgetController extends window.StimulusModule.Controller {
   static values = { opts: Array };
 

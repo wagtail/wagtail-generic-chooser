@@ -119,7 +119,7 @@ class AdminChooser(widgets.Input):
         # render the HTML for just the (hidden) input field
         return super().render(name, value, attrs)
 
-    def render(self, name, value, attrs):
+    def render(self, name, value, attrs, renderer=None):
         value_data = value
 
         original_field_html = self.render_input_html(name, value_data['value'], attrs)
