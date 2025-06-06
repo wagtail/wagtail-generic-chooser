@@ -1,8 +1,8 @@
-0.7 (2024-06-06)
+0.7 (2025-06-06)
 ----------------
 
 * Formalize support for Wagtail 6.x (Matt Westcott)
-* Provisional support for Wagtail 7.0 (Matt Westcott)
+* Wagtail 7.0 support (Matt Westcott)
 * Drop support for Wagtail <5.2, Django <4.2, Python <3.9 (Matt Westcott)
 
 
