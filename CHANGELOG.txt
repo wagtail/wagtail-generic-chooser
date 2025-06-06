@@ -1,4 +1,4 @@
-0.7 (xxxx-xx-xx) - IN DEVELOPMENT
+0.7 (2024-06-06)
 ----------------
 
 * Formalize support for Wagtail 6.x (Matt Westcott)
