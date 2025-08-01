@@ -14,7 +14,7 @@ setup(
     install_requires=[
         'requests>=2.11.1,<3.0',
     ],
-    license='BSD',
+    license='BSD-3-Clause',
     long_description="""
         Base classes for building chooser popups and form widgets for the Wagtail admin,
         matching Wagtail's built-in choosers and backed by either models or a REST API
