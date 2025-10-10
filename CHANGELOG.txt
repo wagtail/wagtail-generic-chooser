@@ -1,3 +1,7 @@
+0.8 (xxxx-xx-xx) - IN DEVELOPMENT
+----------------
+* Wagtail 7.1 conditional imports to resolve telepath deprecation messages.
+
 0.7 (2025-06-06)
 ----------------
 

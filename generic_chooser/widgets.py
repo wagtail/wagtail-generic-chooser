@@ -8,9 +8,14 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from wagtail.telepath import register
-from wagtail.widget_adapters import WidgetAdapter
+from wagtail import VERSION as WAGTAIL_VERSION
 
+if WAGTAIL_VERSION <= (7, 0):
+    from wagtail.telepath import register
+    from wagtail.widget_adapters import WidgetAdapter
+else:
+    from wagtail.admin.telepath import register
+    from wagtail.admin.widget_adapters import WidgetAdapter
 
 class AdminChooser(widgets.Input):
     input_type = 'hidden'
