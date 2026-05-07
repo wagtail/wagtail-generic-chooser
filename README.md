@@ -1,5 +1,11 @@
 # wagtail-generic-chooser
 
+[![PyPI version](https://img.shields.io/pypi/v/wagtail-generic-chooser.svg)](https://pypi.python.org/pypi/wagtail-generic-chooser/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/wagtail-generic-chooser.svg)](https://pypi.org/project/wagtail-generic-chooser/)
+[![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![Build Status](https://github.com/wagtail/wagtail-generic-chooser/actions/workflows/test.yml/badge.svg)](https://github.com/wagtail/wagtail-generic-chooser/actions/workflows/test.yml)
+[![Nightly tests](https://github.com/wagtail/wagtail-generic-chooser/actions/workflows/nightly-tests.yml/badge.svg)](https://github.com/wagtail/wagtail-generic-chooser/actions/workflows/nightly-tests.yml)
+
 **This package is deprecated.** As of Wagtail 5.2, Wagtail's built-in [ChooserViewSet](https://docs.wagtail.org/en/stable/extending/generic_views.html#chooserviewset) provides all the functionality of the `wagtail-generic-choooser` package and will receive improvements as part of Wagtail's overall development. We recommend migrating your use of `wagtail-generic-chooser` to Wagtail's `ChooserViewSet`. This package will only receive maintenance updates as required to address blocking bugs and ensure compatibility with new Wagtail versions.
 
 `wagtail-generic-chooser` provides base classes for building chooser popups and form widgets for the Wagtail admin, matching the look and feel of Wagtail's built-in choosers for pages, documents, snippets and images.
@@ -8,7 +14,7 @@ It differs from existing model chooser add-ons ([Naeka/wagtailmodelchooser](http
 
 ## Requirements
 
-Wagtail 5.2 or higher
+Wagtail 7.0 or higher
 
 ## Installation
 

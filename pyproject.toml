@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wagtail-generic-chooser"
+version = "0.8"
+description = "A toolkit for custom chooser popups in Wagtail"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "BSD-3-Clause"
+authors = [
+	{ name = "Matthew Westcott", email = "matthew.westcott@torchbox.com" },
+]
+dependencies = [
+	"requests>=2.11.1,<3.0",
+]
+classifiers = [
+	"Development Status :: 4 - Beta",
+	"Environment :: Web Environment",
+	"Intended Audience :: Developers",
+	"Operating System :: OS Independent",
+	"Programming Language :: Python",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
+	"Programming Language :: Python :: 3.12",
+	"Programming Language :: Python :: 3.13",
+	"Programming Language :: Python :: 3.14",
+	"Framework :: Django",
+	"Framework :: Django :: 5.2",
+	"Framework :: Django :: 6.0",
+	"Framework :: Wagtail",
+	"Framework :: Wagtail :: 7",
+]
+
+[project.urls]
+Homepage = "https://github.com/wagtail/wagtail-generic-chooser"
+Repository = "https://github.com/wagtail/wagtail-generic-chooser"
+
+[tool.setuptools]
+include-package-data = true
+package-data.generic_chooser = [
+  "locale/**/*.mo",
+  "locale/**/*.po",
+  "static/**/*",
+  "templates/**/*",
+]

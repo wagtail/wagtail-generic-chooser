@@ -8,8 +8,17 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from wagtail.telepath import register
-from wagtail.widget_adapters import WidgetAdapter
+
+from wagtail import VERSION as WAGTAIL_VERSION
+
+# Import was deprecated in 7.1 and removed in 8.0, don't trigger the deprecation
+# warning when importing from the new location in 7.1+
+if WAGTAIL_VERSION >= (7, 1):
+    from wagtail.admin.telepath import register
+    from wagtail.admin.telepath.widgets import WidgetAdapter
+else:
+    from wagtail.telepath import register
+    from wagtail.widget_adapters import WidgetAdapter
 
 
 class AdminChooser(widgets.Input):

@@ -1,0 +1,38 @@
+name: Nightly Wagtail test
+# Inspired by: https://github.com/torchbox/wagtailmedia/blob/00ef0442f50bcea3c22d794774d7302969eaad02/.github/workflows/nightly-tests.yml
+
+on:
+  schedule:
+    # Run every Monday at 3:10am
+    - cron: "10 3 * * 1"
+
+  workflow_dispatch:
+
+jobs:
+  nightly-test:
+    # Cannot check the existence of secrets, so limiting to repository name to prevent all forks to run nightly.
+    # See: https://github.com/actions/runner/issues/520
+    if: ${{ github.repository == 'wagtail/wagtail-generic-chooser' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: |
+          python -m pip install tox requests
+      - name: Test against the 'future' tox environment
+        id: test
+        continue-on-error: true  # We want to report failures, not fail the workflow immediately
+        run: tox -e future
+
+      - name: Send Slack notification on failure
+        if: steps.nightly-test.outcome == 'failure'
+        run: |
+          python .github/report_nightly_build_failure.py
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

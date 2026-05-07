@@ -1,3 +1,14 @@
+0.8 [UNRELEASED]
+----------------
+
+- Add Python 3.14 support (Storm Heg)
+- Add Wagtail 7.4 support (Storm Heg)
+- Drop support for Wagtail 6.3 and earlier (Storm Heg)
+- Drop Python 3.9 support (Storm Heg)
+- Fix RemovedInWagtail80Warning deprecation warnings (Storm Heg)
+- Maintenance: switch from setup.py to pyproject.toml (Storm Heg)
+- Maintenance: use PyPI Trusted Publishing (Storm Heg)
+
 0.7 (2025-06-06)
 ----------------
 
