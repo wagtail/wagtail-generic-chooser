@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'generic_chooser',
     'tests',
 
@@ -77,7 +77,10 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-)
+]
+
+if 'postgres' in DATABASES['default']['ENGINE']:
+    INSTALLED_APPS.append('django.contrib.postgres')
 
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',  # don't use the intentionally slow default password hasher
