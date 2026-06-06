@@ -2,6 +2,7 @@
 ----------------
 
 * Formalize support for Wagtail 7.3-7.4, Django 5.2-6.0, Python 3.14
+* Provisional support for Wagtail 8.0
 * Drop support for Wagtail <7.0, Django <5.2, Python <3.10
 
 

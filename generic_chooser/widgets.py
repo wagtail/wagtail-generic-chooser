@@ -8,8 +8,13 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from wagtail.telepath import register
-from wagtail.widget_adapters import WidgetAdapter
+
+try:
+    from wagtail.admin.telepath import register
+    from wagtail.admin.telepath.widgets import WidgetAdapter
+except ImportError:  # Wagtail <7.1
+    from wagtail.telepath import register
+    from wagtail.widget_adapters import WidgetAdapter
 
 
 class AdminChooser(widgets.Input):
