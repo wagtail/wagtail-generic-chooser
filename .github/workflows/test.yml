@@ -7,13 +7,10 @@ on:
   pull_request:
 
 # Current configuration:
-# - django 4.2, python 3.9, wagtail 5.2, postgres
-# - django 5.0, python 3.10, wagtail 6.0, sqlite
-# - django 5.1, python 3.11, wagtail 6.1, postgres
-# - django 5.1, python 3.12, wagtail 6.2, sqlite
-# - django 5.1, python 3.12, wagtail 6.3, postgres
-# - django 5.2, python 3.13, wagtail 6.4, sqlite
-# - django 5.2, python 3.13, wagtail main, sqlite (allow failures)
+# - django 5.2, python 3.10, wagtail 7.0, postgres
+# - django 5.2, python 3.12, wagtail 7.3, sqlite
+# - django 6.0, python 3.13, wagtail 7.4, postgres
+# - django 6.0, python 3.14, wagtail main, sqlite (allow failures)
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -21,46 +18,31 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.9"
-            django: "Django>=4.2,<4.3"
-            wagtail: "wagtail>=5.2,<5.3"
-            database: "postgresql"
-            experimental: false
           - python: "3.10"
-            django: "Django>=5.0,<5.1"
-            wagtail: "wagtail>=6.0,<6.1"
-            database: "sqlite3"
-            experimental: false
-          - python: "3.11"
-            django: "Django>=5.1,<5.2"
-            wagtail: "wagtail>=6.1,<6.2"
+            django: "Django>=5.2,<5.3"
+            wagtail: "wagtail>=7.0,<7.1"
             database: "postgresql"
             experimental: false
           - python: "3.12"
-            django: "Django>=5.1,<5.2"
-            wagtail: "wagtail>=6.2,<6.3"
+            django: "Django>=5.2,<5.3"
+            wagtail: "wagtail>=7.3,<7.4"
             database: "sqlite3"
-            experimental: false
-          - python: "3.12"
-            django: "Django>=5.1,<5.2"
-            wagtail: "wagtail>=6.3,<6.4"
-            database: "postgresql"
             experimental: false
           - python: "3.13"
-            django: "Django>=5.2,<5.3"
-            wagtail: "wagtail>=6.4,<6.5"
-            database: "sqlite3"
+            django: "Django>=6.0,<6.1"
+            wagtail: "wagtail>=7.4,<7.5"
+            database: "postgresql"
             experimental: false
 
-          - python: "3.13"
-            django: "Django>=5.2,<5.3"
+          - python: "3.14"
+            django: "Django>=6.0,<6.1"
             wagtail: "git+https://github.com/wagtail/wagtail.git@main#egg=wagtail"
             database: "sqlite3"
             experimental: true
 
     services:
       postgres:
-        image: postgres:14
+        image: postgres:18
         env:
           POSTGRES_PASSWORD: postgres
         ports:
