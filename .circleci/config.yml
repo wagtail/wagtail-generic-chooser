@@ -1,11 +1,13 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@0.2.1
+  python: circleci/python@4.0.0
 
 jobs:
   build-and-test:
-    executor: python/default
+    executor:
+      name: python/default
+      tag: "3.11"
     steps:
       - checkout
       - restore_cache:
@@ -21,7 +23,9 @@ jobs:
           name: Test
 
   nightly-wagtail-test:
-    executor: python/default
+    executor:
+      name: python/default
+      tag: "3.11"
     steps:
       - checkout
       - run: git clone git@github.com:wagtail/wagtail.git
